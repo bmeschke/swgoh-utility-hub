@@ -14,7 +14,7 @@ import {
   getRecommendationLabel,
   getValueBadgeClass,
 } from '@/lib/valuations'
-import { ArrowLeftIcon } from 'lucide-react'
+import { ArrowLeftIcon, Dices } from 'lucide-react'
 import EditPackForm from './EditPackForm'
 
 interface PackDetailProps {
@@ -105,14 +105,29 @@ export default function PackDetail({ packId }: PackDetailProps) {
           <CardTitle className="text-base">Contents</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1.5 text-sm">
-          {pack.itemsWithDetails.map((item, i) => (
-            <div key={i} className="flex justify-between">
-              <span>{item.name}</span>
-              <span className="text-muted-foreground">
-                {item.quantity}×{item.crystalValue.toLocaleString()}✦ = {(item.crystalValue * item.quantity).toLocaleString()}✦
-              </span>
-            </div>
-          ))}
+          {pack.itemsWithDetails.map((item, i) => {
+            const isRolled = item.tiers && item.tiers.length > 0
+            return (
+              <div key={i} className="space-y-0.5">
+                <div className="flex justify-between">
+                  <span className="flex items-center gap-1">
+                    {item.name}
+                    {isRolled && <Dices className="size-3 text-muted-foreground" />}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {isRolled ? '~' : ''}{item.quantity}×{item.crystalValue.toLocaleString()}✦ = {isRolled ? '~' : ''}{(item.crystalValue * item.quantity).toLocaleString()}✦
+                  </span>
+                </div>
+                {isRolled && (
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-4 text-xs text-muted-foreground">
+                    {item.tiers!.map((t, ti) => (
+                      <span key={ti}>{t.probability}% → {t.quantity}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </CardContent>
       </Card>
 

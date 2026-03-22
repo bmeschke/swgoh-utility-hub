@@ -2,6 +2,14 @@ import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireAdmin } from './lib/adminCheck'
 
+const tierValidator = v.object({ probability: v.number(), quantity: v.number() })
+
+const itemLineValidator = v.object({
+  itemId: v.id('items'),
+  quantity: v.number(),
+  tiers: v.optional(v.array(tierValidator)),
+})
+
 /** Public: list all published packs */
 export const listPublished = query({
   args: {},
@@ -26,6 +34,7 @@ export const get = query({
         return {
           itemId: line.itemId,
           quantity: line.quantity,
+          tiers: line.tiers,
           name: item?.name ?? 'Unknown',
           category: item?.category,
           crystalValue: item?.crystalValue ?? 0,
@@ -43,12 +52,7 @@ export const create = mutation({
     name: v.string(),
     price: v.number(),
     priceCurrency: v.optional(v.union(v.literal('usd'), v.literal('crystals'))),
-    items: v.array(
-      v.object({
-        itemId: v.id('items'),
-        quantity: v.number(),
-      })
-    ),
+    items: v.array(itemLineValidator),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -80,14 +84,7 @@ export const update = mutation({
     name: v.optional(v.string()),
     price: v.optional(v.number()),
     priceCurrency: v.optional(v.union(v.literal('usd'), v.literal('crystals'))),
-    items: v.optional(
-      v.array(
-        v.object({
-          itemId: v.id('items'),
-          quantity: v.number(),
-        })
-      )
-    ),
+    items: v.optional(v.array(itemLineValidator)),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

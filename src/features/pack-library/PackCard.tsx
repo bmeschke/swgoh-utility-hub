@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import type { Doc } from '../../../convex/_generated/dataModel'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dices } from 'lucide-react'
 import {
   calcDollarValue,
   calcGainLossPercent,
@@ -31,14 +32,16 @@ export default function PackCard({ pack }: PackCardProps) {
 
   const standardValue = calcDollarValue(pack.crystalEquivalent, 'regular')
   const holidayValue = calcDollarValue(pack.crystalEquivalent, 'holiday')
+  const hasRolledItems = pack.items.some((i) => i.tiers && i.tiers.length > 0)
 
   return (
     <Link to={`/pack-library/${pack._id}`}>
       <Card className={`hover:bg-muted/30 transition-colors cursor-pointer h-full overflow-hidden border ${getValueBorderClass(pct)}`}>
         {/* Pull header flush with top of card by negating Card's pt-4 */}
         <CardHeader className={`-mt-4 pt-4 pb-3 ${getValueHeaderBgClass(pct)}`}>
-          <CardTitle className="text-sm font-semibold line-clamp-2">
+          <CardTitle className="text-sm font-semibold line-clamp-2 flex items-center gap-1.5">
             {pack.name}
+            {hasRolledItems && <Dices className="size-3.5 shrink-0 opacity-70" />}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 text-sm pt-3">

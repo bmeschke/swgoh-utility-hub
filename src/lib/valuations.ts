@@ -1,5 +1,10 @@
 export type PriceCurrency = 'usd' | 'crystals'
 
+export interface ProbabilityTier {
+  probability: number // 0–100
+  quantity: number
+}
+
 export const REGULAR_CPD = 165 // crystals per dollar (regular pricing)
 export const HOLIDAY_CPD = 212 // crystals per dollar (holiday pricing)
 

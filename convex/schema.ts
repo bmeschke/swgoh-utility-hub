@@ -17,7 +17,10 @@ export default defineSchema({
     items: v.array(
       v.object({
         itemId: v.id('items'),
-        quantity: v.number(),
+        quantity: v.number(), // effective quantity (EV when tiers present)
+        tiers: v.optional(
+          v.array(v.object({ probability: v.number(), quantity: v.number() }))
+        ),
       })
     ),
     crystalEquivalent: v.number(),

@@ -8,7 +8,7 @@ import type { Id } from '../../../convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { calcCrystalEquivalent, type PriceCurrency } from '@/lib/valuations'
+import { calcCrystalEquivalent, type PriceCurrency, type ProbabilityTier } from '@/lib/valuations'
 import { cn } from '@/lib/utils'
 import ItemCombobox, { type ItemComboboxHandle } from '@/features/pack-evaluation/ItemCombobox'
 import PackLineItem from '@/features/pack-evaluation/PackLineItem'
@@ -19,6 +19,7 @@ interface LineItem {
   name: string
   crystalValue: number
   quantity: number
+  tiers?: ProbabilityTier[]
 }
 
 const schema = z.object({
@@ -61,6 +62,7 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
           name: i.name,
           crystalValue: i.crystalValue,
           quantity: i.quantity,
+          tiers: i.tiers,
         })),
         price: String(pack.price),
         priceCurrency: (pack.priceCurrency ?? 'usd') as PriceCurrency,
@@ -107,6 +109,7 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
       items: watchedItems.map((item) => ({
         itemId: item.itemId as Id<'items'>,
         quantity: item.quantity,
+        tiers: item.tiers,
       })),
       notes: values.notes || undefined,
     })
@@ -132,7 +135,9 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
                 name={field.name}
                 crystalValue={field.crystalValue}
                 quantity={watchedItems[index]?.quantity ?? field.quantity}
+                tiers={watchedItems[index]?.tiers}
                 onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
+                onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
                 onRemove={() => remove(index)}
                 inputRef={(el) => { qtyRefs.current[index] = el }}
                 onEnter={() => comboboxRef.current?.openAndFocus()}

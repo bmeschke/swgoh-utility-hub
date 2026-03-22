@@ -4,7 +4,7 @@ import type { Doc } from '../../../convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { calcCrystalEquivalent, type PriceCurrency } from '@/lib/valuations'
+import { calcCrystalEquivalent, type PriceCurrency, type ProbabilityTier } from '@/lib/valuations'
 import { cn } from '@/lib/utils'
 import ItemCombobox, { type ItemComboboxHandle } from './ItemCombobox'
 import PackLineItem from './PackLineItem'
@@ -15,6 +15,7 @@ export interface EvalLineItem {
   name: string
   crystalValue: number
   quantity: number
+  tiers?: ProbabilityTier[]
 }
 
 interface FormValues {
@@ -87,7 +88,9 @@ export default function EvaluatePackForm() {
                 name={field.name}
                 crystalValue={field.crystalValue}
                 quantity={watchedItems[index]?.quantity ?? field.quantity}
+                tiers={watchedItems[index]?.tiers}
                 onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
+                onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
                 onRemove={() => remove(index)}
                 inputRef={(el) => { qtyRefs.current[index] = el }}
                 onEnter={() => comboboxRef.current?.openAndFocus()}

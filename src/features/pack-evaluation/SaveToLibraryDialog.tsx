@@ -57,6 +57,7 @@ export default function SaveToLibraryDialog({
       items: items.map((item) => ({
         itemId: item.itemId as Id<'items'>,
         quantity: item.quantity,
+        tiers: item.tiers,
       })),
       notes: values.notes || undefined,
     })
