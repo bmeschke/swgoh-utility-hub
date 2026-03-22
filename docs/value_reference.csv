@@ -1,0 +1,100 @@
+Type,Subtype,Name,Crystal Value,Location / Reason
+Shard,Conquest,Ex: Queen Amidala,120,Store
+Shard,Shipment Only Ship,Ex: Bistan's U-Wing,120,Store
+Shard,Standard Ship,Ex: TIE Reaper,100,Store
+Shard,New Marquee,Ex: Stormtrooper Luke,167,Store
+Shard,New Marquee (Discount),Ex: Stormtrooper Luke,139,Crystal Pack Value
+Shard,Unaccelerated,Ex: Depa Billaba,80,Store
+Shard,Accelerated,Ex: Captain Rex,40,Store
+Gear,Kyrotech,Mk 7 Shock Prod Prototype Salvage,28,Store
+Gear,Kyrotech,Mk 9 Battle Computer Prototype Salvage,28,Store
+Gear,Kyrotech,Kyrotech Power Converter,2800,Store
+Gear,Kyrotech,Kyrotech Shock Prod,2800,Store
+Gear,Kyrotech,Kyrotech Battle Comp,2800,Store
+Gear,Kyrotech,Mk 7 Shock Prod Prototype,1400,Store
+Gear,Kyrotech,Mk 9 Battle Computer Prototype,1400,Store
+Gear,Purple Gear,Mk 5 Arakyd Droid Caller Salvage,28,Store
+Gear,Finisher,Injector Cell Salvage,35,Store
+Gear,Finisher,Injector Head Salvage,35,Store
+Gear,Finisher,Injector Handle Salvage,35,Store
+Gear,Purple Gear,Mk 3 Czerka Stun Cuffs Salvage,28,Store
+Gear,Gear 12,Mk 12 Czerka Stun Cuffs Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 Czerka Shield Generator Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 Czerka Security Scanner Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 Czerka Hypo Syringe Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 Czerka Sensor Array Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 Czerka Implant Prototype Salvage,30,Store
+Gear,Gear 12+,Mk 12 ArmaTek Data Pad Prototype Salvage,35,Store
+Gear,Gear 12+,Mk 12 ArmaTek Data Pad,4150,Calculated from Parts
+Gear,Gear 12+,Mk 12 ArmaTek Fusion Furnace Prototype Salvage,35,Store
+Gear,Gear 12+,Mk 12 ArmaTek Fusion Furnace,4150,Calculated from Parts
+Gear,Gear 12+,Mk 12 ArmaTek Holo Lens Prototype Salvage,35,Store
+Gear,Gear 12+,Mk 12 ArmaTek Holo Lens,4150,Calculated from Parts
+Gear,Gear 12+,Mk 12 ArmaTek Key Pad Prototype Salvage,35,Store
+Gear,Gear 12+,Mk 12 ArmaTek Key Pad,4150,Calculated from Parts
+Gear,Gear 12+,Mk 12 ArmaTek Stun Gun Prototype Salvage,35,Store
+Gear,Gear 12+,Mk 12 ArmaTek Stun Gun,4150,Calculated from Parts
+Gear,Gear 12+,Mk 12 ArmaTek Thermal Detonator Prototype Salvage,35,Store
+Gear,Gear 12+,Mk 12 ArmaTek Thermal Detonator,4150,Calculated from Parts
+Gear,Gear 12,Mk 12 ArmaTek Armor Plating Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Armor Plating,900,Store
+Gear,Gear 12,Mk 12 ArmaTek Bayonet Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Bayonet,900,Store
+Gear,Gear 12,Mk 12 ArmaTek Cybernetics Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Cybernetics,900,Store
+Gear,Gear 12,Mk 12 ArmaTek Medpac Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Medpac,900,Store
+Gear,Gear 12,Mk 12 ArmaTek Multi-tool Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Multi-tool,900,Store
+Gear,Gear 12,Mk 12 ArmaTek Tactical Data Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Tactical Data,900,Store
+Gear,Gear 12,Mk 12 ArmaTek Visor Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Visor,900,Store
+Gear,Gear 12,Mk 12 ArmaTek Wrist Band Prototype Salvage,30,Store
+Gear,Gear 12,Mk 12 ArmaTek Wrist Band,900,Store
+Gear,Purple Gear,Mk 6 Carbanti Sensory Array Salvage,30,Store
+Gear,Purple Gear,Mk 5 A-KT Stun Gun Prototype Salvage,26,Store
+Gear,Purple Gear,Mk 8 Neuro-Saav Electrobinoculars Component,25,Store
+Gear,Signal Data,Grey (Fragmented) SD,15,Store
+Gear,Signal Data,Green (Incomplete) SD,20,Store
+Gear,Signal Data,Blue (Flawed) SD,30,Store
+Gear,Signal Data,Purple (Corrupted) SD,300,Avg of Bought and Conversion
+Gear,Relic Material,Carbonite Circuit Board,3.125,500c Pack
+Gear,Relic Material,Bronzium Wiring,12,500c Pack
+Gear,Relic Material,Chromium Transistors,0,Mk7 BlasTech Weapon Mod Conversion
+Gear,Relic Material,Aurodium Heatsink,40,Mk3 Holoprojector Conversion
+Gear,Relic Material,Electrium Conductor,61.76,500c Pack
+Gear,Relic Material,Zinbiddle Card,78.125,500c Pack
+Gear,Relic Material,Impulse Detector,113.63,500c Pack
+Gear,Relic Material,Aeromagnifier,113.63,500c Pack
+Gear,Relic Material,Droid Brain,300,Store
+Gear,Relic Material,Gyrda Keypad,250,Store
+Gear,Relic Material,Coaxial Servomotor,553.3,Relic X Bundle
+Other,Currency,Crystals,1,Base Value
+Other,Ability Material,Omega Ability Mat,100,Daily Deal
+Other,Ability Material,Zeta Ability Mat,228,Daily Deal
+Other,Ability Material,Omicron Ability Mat,481,Store
+Mod Material,Mod Material,Mk 1 Amplifier,8,Store
+Mod Material,Mod Material,Mk 1 Capacitor,8,Store
+Mod Material,Mod Material,Mk 1 Bonding Pin,8,Store
+Mod Material,Mod Material,Mk 1 Fusion Disk,8,Store
+Mod Material,Mod Material,Mk 1 Fusion Coil,8,Store
+Mod Material,Mod Material,Mk 1 Power Flow Control Chip,8,Store
+Mod Material,Mod Material,Mk 2 Thermal Exchange Unit,16,Store
+Mod Material,Mod Material,Mk 2 Circuit Breaker Module,16,Store
+Mod Material,Mod Material,Mk 2 Microprocessor,20,Store
+Mod Material,Mod Material,Mk 2 Variable Resistor,20,Store
+Mod Material,Mod Material,Mk 2 Pulse Modulator,30,Store
+Mod Material,Mod Material,Micro Attenuator,33,Store
+Datacron Material,Datacron Material,Data-cache,0.0002,Store
+Datacron Material,Datacron Material,Mk 1 Material,5,Store
+Datacron Material,Datacron Material,Mk 2 Material,8,Store
+Datacron Material,Datacron Material,Mk 3 Material,24,Store
+Datacron Material,Datacron Material,Mk 1 Breakdown,5,Store
+Datacron Material,Datacron Material,Mk 2 Breakdown,8,Store
+Datacron Material,Datacron Material,Mk 3 Breakdown,24,Store
+Other,Energy,Normal Energy,0.42,First Refresh
+Other,Energy,Ship Energy,0.42,First Refresh
+Other,Energy,Mod Energy,0.42,First Refresh
+Other,Energy,Cantina Energy,0.83,First Refresh
+Other,Energy,Conquest Energy,0.42,First Refresh
