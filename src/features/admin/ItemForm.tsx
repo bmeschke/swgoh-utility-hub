@@ -9,7 +9,7 @@ const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   category: z.string().optional(),
   crystalValue: z.coerce
-    .number({ invalid_type_error: 'Must be a number' })
+    .number({ error: 'Must be a number' })
     .positive('Must be positive'),
 })
 
@@ -33,7 +33,7 @@ export default function ItemForm({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ItemFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as never,
     defaultValues,
   })
 

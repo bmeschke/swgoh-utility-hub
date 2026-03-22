@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import type { Doc } from '../../../convex/_generated/dataModel'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { calcCrystalEquivalent, type PriceCurrency, type ProbabilityTier } from '@/lib/valuations'

@@ -41,7 +41,7 @@ interface Props {
 
 export default function AssaultBattlesSection({ inputs, onChange }: Props) {
   const handleChange = (battle: string, tier: string) => {
-    onChange({ ...inputs, [battle]: tier })
+    onChange({ ...inputs, [battle]: tier as StandardABTier | ShortABTier })
   }
 
   return (
@@ -60,7 +60,7 @@ export default function AssaultBattlesSection({ inputs, onChange }: Props) {
           return (
             <div key={battle} className="flex items-center justify-between gap-3 rounded border p-2">
               <span className="text-sm font-medium">{battle}</span>
-              <Select value={value} onValueChange={(v) => handleChange(battle, v)}>
+              <Select value={value} onValueChange={(v) => v && handleChange(battle, v)}>
                 <SelectTrigger className="w-44 h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>

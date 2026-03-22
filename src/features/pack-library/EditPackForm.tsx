@@ -42,6 +42,7 @@ interface EditPackFormProps {
       quantity: number
       name: string
       crystalValue: number
+      tiers?: { probability: number; quantity: number }[]
     }[]
   }
   onCancel: () => void
