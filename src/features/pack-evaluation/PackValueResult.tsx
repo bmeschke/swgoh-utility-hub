@@ -20,13 +20,14 @@ interface PackValueResultProps {
   items: EvalLineItem[]
 }
 
-function GainBadge({ pct }: { pct: number }) {
+function GainBadge({ pct, displayPct }: { pct: number; displayPct?: number }) {
   const label = getRecommendationLabel(pct)
-  const sign = pct >= 0 ? '+' : ''
+  const shown = displayPct ?? pct
+  const sign = shown >= 0 ? '+' : ''
   const variant = pct > 5 ? 'default' : pct >= -5 ? 'secondary' : 'destructive'
   return (
     <Badge variant={variant} className="ml-2 text-xs">
-      {sign}{pct.toFixed(1)}% — {label}
+      {sign}{shown.toFixed(1)}% — {label}
     </Badge>
   )
 }
@@ -95,7 +96,7 @@ export default function PackValueResult({
                     <span className="text-muted-foreground">Holiday pricing</span>
                     <span className="flex items-center">
                       ${holidayValue.toFixed(2)}
-                      <GainBadge pct={holidayPct} />
+                      <GainBadge pct={regularPct} displayPct={holidayPct} />
                     </span>
                   </div>
                 </>
