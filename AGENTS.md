@@ -135,6 +135,35 @@ tests/
 
 ---
 
+## Feature Testing Workflow
+
+Features are built and tested in two stages:
+
+**Stage 1 — Build it.** Implement the feature. Run `typecheck` and `test` to confirm nothing is broken. The feature does not need tests of its own yet — that comes after QA.
+
+**Stage 2 — Test it (after QA sign-off).** Once the user has reviewed the feature in the browser and confirmed it works correctly, write tests for it before moving on to anything else. Do not start a new feature until the previous one has tests.
+
+### What to test after QA sign-off
+
+For every completed feature, write tests in this order:
+
+1. **Pure logic first** (`src/lib/`) — unit test every calculation function, every threshold, every edge case (zero values, negative values, boundary conditions). These are the most valuable tests: fast, deterministic, and they protect the math that users depend on. Co-locate the test file next to the source file (e.g. `valuations.ts` → `valuations.test.ts`).
+
+2. **Key UI behavior** — integration test the parts of the UI that involve logic or state: form submissions, computed outputs being displayed correctly, loading/empty/error states. Use React Testing Library. Mock Convex and Clerk — do not depend on live services.
+
+3. **Happy-path E2E** (only for critical flows) — add a Playwright test if the feature is a major user-facing flow (e.g. evaluating a pack end-to-end). Keep E2E tests minimal; they are expensive and slow.
+
+### What good tests look like
+
+- **Pin constants.** If a function depends on a named constant (e.g. `REGULAR_CPD = 165`), test that the constant has the expected value. This catches accidental edits.
+- **Test every label/tier boundary explicitly.** For threshold functions like `getRecommendationLabel`, test the value exactly at each threshold, just above it, and just below it.
+- **Test zero and negative inputs.** Every calculation that could receive zero or negative input should have a test for it — these are common sources of division-by-zero bugs.
+- **Test field isolation.** When a compute function returns an `IncomeResult`, verify that only the expected fields are non-zero. This prevents cross-contamination bugs when new fields are added.
+- **Test immutability.** If a function takes an object and returns a new one, confirm the input was not mutated.
+- **Name tests as sentences.** `it('returns "Scam" at exactly 0%')` is better than `it('works')`. A failing test name should tell you exactly what broke without reading the test body.
+
+---
+
 ## Testing Requirements
 
 Follow the **Testing Pyramid**:
