@@ -8,7 +8,6 @@ import PackDetailPage from '@/routes/PackDetailPage'
 import EvaluatePackPage from '@/routes/EvaluatePackPage'
 import PlanningPage from '@/routes/PlanningPage'
 import IncomePage from '@/routes/IncomePage'
-import DebugPage from '@/routes/DebugPage'
 import AdminItemsPage from '@/routes/AdminItemsPage'
 import NotFoundPage from '@/routes/NotFoundPage'
 
@@ -45,8 +44,7 @@ export default function App() {
             </AdminRoute>
           }
         />
-        <Route path="/debug" element={<DebugPage />} />
-        <Route path="*" element={<NotFoundPage />} />
+<Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )
