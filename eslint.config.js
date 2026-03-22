@@ -1,3 +1,7 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+import prettierConfig from 'eslint-config-prettier'
+
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
@@ -20,4 +24,20 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // shadcn/ui components export both components and variant helpers — suppress the HMR warning
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  ...storybook.configs["flat/recommended"],
+  // Story files import types from @storybook/react — disable the no-renderer-packages rule
+  {
+    files: ['**/*.stories.{ts,tsx}'],
+    rules: {
+      'storybook/no-renderer-packages': 'off',
+    },
+  },
+  prettierConfig,
 ])
