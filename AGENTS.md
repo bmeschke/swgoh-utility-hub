@@ -210,26 +210,32 @@ Before any PR is considered complete, verify all of the following:
 
 ---
 
-## Pre-Commit Checks (run these locally before every commit)
+## Commit Cadence
 
-Run all three commands and confirm each passes before committing:
+**Commit early and often — after every meaningful, working increment.**
+
+Do not batch up a large block of work into a single commit. A good rule of thumb:
+- Completed a new file or component? Commit.
+- Fixed a bug or resolved an error? Commit.
+- Finished a discrete step in a multi-step plan? Commit.
+- Renamed or reorganized something? Commit.
+
+Each commit should leave the repo in a working state (tests pass, no type errors). Small commits make it easy to bisect problems, revert mistakes, and review history.
+
+**Before every commit, run:**
 
 ```bash
-# 1. Run all unit and integration tests
-npm run test
-
-# 2. TypeScript type checking (no emitting, just errors)
-npm run typecheck
-
-# 3. Production build (confirms the app bundles correctly)
-npm run build
+npm run test -- --run   # unit + integration tests
+npm run typecheck       # TypeScript — no errors
 ```
 
-Run this before pushing (after committing):
+If either check fails, fix the problem before committing.
+
+**Before pushing**, also run:
 
 ```bash
-# End-to-end smoke tests (requires the dev server or a test environment running)
-npx playwright test
+npm run build           # confirms the app bundles correctly
+npx playwright test     # E2E smoke tests (requires dev server running)
 ```
 
 ---

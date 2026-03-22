@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as income from "../income.js";
 import type * as items from "../items.js";
 import type * as lib_adminCheck from "../lib/adminCheck.js";
 import type * as packs from "../packs.js";
@@ -20,6 +21,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  income: typeof income;
   items: typeof items;
   "lib/adminCheck": typeof lib_adminCheck;
   packs: typeof packs;

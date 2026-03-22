@@ -2,5 +2,5 @@ import { test, expect } from '@playwright/test'
 
 test('home page loads', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'SWGOH Utility Hub' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Galaxy Tools' })).toBeVisible()
 })

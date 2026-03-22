@@ -10,7 +10,7 @@ export default function Nav() {
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="text-sm font-semibold">
-            SWGOH Utility Hub
+            Galaxy Tools
           </Link>
           <Link
             to="/pack-library"
@@ -24,6 +24,14 @@ export default function Nav() {
           >
             Evaluate Pack
           </Link>
+          {isSignedIn && (
+            <Link
+              to="/income"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Income
+            </Link>
+          )}
         </div>
         <div>
           {isLoaded && (

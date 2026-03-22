@@ -7,6 +7,7 @@ import PackLibraryPage from '@/routes/PackLibraryPage'
 import PackDetailPage from '@/routes/PackDetailPage'
 import EvaluatePackPage from '@/routes/EvaluatePackPage'
 import PlanningPage from '@/routes/PlanningPage'
+import IncomePage from '@/routes/IncomePage'
 import AdminItemsPage from '@/routes/AdminItemsPage'
 import NotFoundPage from '@/routes/NotFoundPage'
 
@@ -19,6 +20,14 @@ export default function App() {
         <Route path="/pack-library" element={<PackLibraryPage />} />
         <Route path="/pack-library/:packId" element={<PackDetailPage />} />
         <Route path="/evaluate-pack" element={<EvaluatePackPage />} />
+        <Route
+          path="/income"
+          element={
+            <ProtectedRoute>
+              <IncomePage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/planning/*"
           element={

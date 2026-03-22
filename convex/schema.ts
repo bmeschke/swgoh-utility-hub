@@ -2,6 +2,19 @@ import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
 export default defineSchema({
+  incomeProfiles: defineTable({
+    userId: v.string(),
+    updatedAt: v.number(),
+    crystalIncome: v.optional(v.any()),
+    assaultBattles: v.optional(v.any()),
+    territoryBattles: v.optional(v.any()),
+    raidRewards: v.optional(v.any()),
+    territoryWar: v.optional(v.any()),
+    conquest: v.optional(v.any()),
+    specialEvents: v.optional(v.any()),
+  }).index('by_userId', ['userId']),
+
+
   items: defineTable({
     name: v.string(),
     category: v.optional(v.string()),
