@@ -17,6 +17,39 @@ import {
 import { ArrowLeftIcon, Dices } from 'lucide-react'
 import EditPackForm from './EditPackForm'
 
+// Maps a raw item category to a normalised display label.
+// All "Shard - *" variants collapse to "Shards".
+function normaliseCategory(raw: string | undefined): string {
+  if (!raw) return 'Other'
+  if (raw.startsWith('Shard')) return 'Shards'
+  const MAP: Record<string, string> = {
+    'Ability Material': 'Ability Materials',
+    'Mod Material': 'Mod Materials',
+    'Datacron Material': 'Datacron Materials',
+    'Gear - G12': 'Gear - G12',
+    'Gear - G12+': 'Gear - G12+',
+    'Gear - Relic Material': 'Gear - Relic Materials',
+  }
+  return MAP[raw] ?? raw
+}
+
+// Canonical display order. Categories not in this list appear at the end.
+const CATEGORY_ORDER = [
+  'Currency',
+  'Energy',
+  'Shards',
+  'Ability Materials',
+  'Mod Materials',
+  'Datacron Materials',
+  'Gear - Purple',
+  'Gear - Kyrotech',
+  'Gear - G12',
+  'Gear - G12+',
+  'Gear - Finisher',
+  'Gear - Signal Data',
+  'Gear - Relic Materials',
+]
+
 interface PackDetailProps {
   packId: Id<'packs'>
 }
@@ -104,30 +137,54 @@ export default function PackDetail({ packId }: PackDetailProps) {
         <CardHeader>
           <CardTitle className="text-base">Contents</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-1.5 text-sm">
-          {pack.itemsWithDetails.map((item, i) => {
-            const isRolled = item.tiers && item.tiers.length > 0
-            return (
-              <div key={i} className="space-y-0.5">
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1">
-                    {item.name}
-                    {isRolled && <Dices className="size-3 text-muted-foreground" />}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {isRolled ? '~' : ''}{item.quantity}×{item.crystalValue.toLocaleString()}✦ = {isRolled ? '~' : ''}{(item.crystalValue * item.quantity).toLocaleString()}✦
-                  </span>
-                </div>
-                {isRolled && (
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-4 text-xs text-muted-foreground">
-                    {item.tiers!.map((t, ti) => (
-                      <span key={ti}>{t.probability}% → {t.quantity}</span>
-                    ))}
-                  </div>
-                )}
+        <CardContent className="space-y-4 text-sm">
+          {(() => {
+            // Group by normalised display category
+            const groups = new Map<string, typeof pack.itemsWithDetails>()
+            for (const item of pack.itemsWithDetails) {
+              const key = normaliseCategory(item.category)
+              if (!groups.has(key)) groups.set(key, [])
+              groups.get(key)!.push(item)
+            }
+            // Sort groups by canonical order; unknowns go to the end
+            const sorted = Array.from(groups.entries()).sort(([a], [b]) => {
+              const ai = CATEGORY_ORDER.indexOf(a)
+              const bi = CATEGORY_ORDER.indexOf(b)
+              const aPos = ai === -1 ? Infinity : ai
+              const bPos = bi === -1 ? Infinity : bi
+              return aPos - bPos
+            })
+            return sorted.map(([category, items]) => (
+              <div key={category} className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {category}
+                </p>
+                {items.map((item, i) => {
+                  const isRolled = item.tiers && item.tiers.length > 0
+                  return (
+                    <div key={i} className="space-y-0.5">
+                      <div className="flex justify-between">
+                        <span className="flex items-center gap-1">
+                          {item.name}
+                          {isRolled && <Dices className="size-3 text-muted-foreground" />}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {isRolled ? '~' : ''}{item.quantity}×{item.crystalValue.toLocaleString()}✦ = {isRolled ? '~' : ''}{(item.crystalValue * item.quantity).toLocaleString()}✦
+                        </span>
+                      </div>
+                      {isRolled && (
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-4 text-xs text-muted-foreground">
+                          {item.tiers!.map((t, ti) => (
+                            <span key={ti}>{t.probability}% → {t.quantity}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            ))
+          })()}
         </CardContent>
       </Card>
 
