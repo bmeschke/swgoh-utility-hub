@@ -98,6 +98,25 @@ export const seedItems = internalMutation({
   },
 })
 
+/** Internal-only seed — no auth check, callable from dashboard or other Convex functions */
+export const internalSeed = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db.query('items').take(1)
+    if (existing.length > 0) {
+      throw new ConvexError('Items already seeded')
+    }
+    for (const seed of SEED_ITEMS) {
+      await ctx.db.insert('items', {
+        name: seed.name,
+        category: seed.category,
+        crystalValue: seed.crystalValue,
+        isActive: true,
+      })
+    }
+  },
+})
+
 /** Admin: trigger the seed (calls internal seedItems) */
 export const triggerSeed = mutation({
   args: {},
