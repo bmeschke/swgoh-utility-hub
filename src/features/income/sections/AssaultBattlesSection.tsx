@@ -18,20 +18,15 @@ import {
 
 // Full list of assault battles
 const ASSAULT_BATTLES = [
-  'Duel of the Fates',
-  'Peridea Patrol',
-  'Separatist Might',
-  'Rebel Assault',
-  'Imperial Retaliation',
-  'Chromium Zeal',
+  'Fanatical Devotion',
+  'Forest Moon',
+  'Ground War',
+  'Military Might',
   'Places of Power',
-  'Wat Tambor',
-  'Geonosis: Separatist Might',
-  'Geonosis: Republic Offensive',
-  'Pit Challenge',
-  'Tank Takedown',
-  'Rancor',
-  'HSTR',
+  'Rebel Roundup',
+  'Secrets and Shadows',
+  'Peridea Patrol',
+  'Duel of the Fates',
 ]
 
 interface Props {
@@ -47,8 +42,7 @@ export default function AssaultBattlesSection({ inputs, onChange }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Select the highest tier you complete for each Assault Battle. Payout amounts will be filled
-        in when data is confirmed.
+        Select the highest tier you complete for each Assault Battle.
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {ASSAULT_BATTLES.map((battle) => {

@@ -39,7 +39,7 @@ describe('sumIncome', () => {
       ...ZERO_INCOME,
       crystals: 10,
       getMk1: 20,
-      signalData: 5,
+      greySignalData: 5,
     }
     const b: IncomeResult = {
       ...ZERO_INCOME,
@@ -50,7 +50,7 @@ describe('sumIncome', () => {
     const result = sumIncome(a, b)
     expect(result.crystals).toBe(100)
     expect(result.getMk1).toBe(100)
-    expect(result.signalData).toBe(5)
+    expect(result.greySignalData).toBe(5)
     expect(result.bronziumWiring).toBe(15)
     // Fields untouched by either input remain 0
     expect(result.getMk2).toBe(0)
@@ -83,8 +83,8 @@ describe('SHORT_TIER_BATTLES', () => {
   })
 
   it('does not include standard-tier battles', () => {
-    expect(SHORT_TIER_BATTLES).not.toContain('Separatist Might')
-    expect(SHORT_TIER_BATTLES).not.toContain('Rebel Assault')
+    expect(SHORT_TIER_BATTLES).not.toContain('Fanatical Devotion')
+    expect(SHORT_TIER_BATTLES).not.toContain('Ground War')
   })
 })
 
@@ -97,31 +97,42 @@ describe('computeAssaultBattleIncome', () => {
 
   it('returns ZERO_INCOME when all battles are set to none', () => {
     const result = computeAssaultBattleIncome({
-      'Separatist Might': 'none',
-      'Rebel Assault': 'none',
+      'Fanatical Devotion': 'none',
+      'Forest Moon': 'none',
       'Duel of the Fates': 'none',
     })
     expect(result).toEqual(ZERO_INCOME)
   })
 
-  it('only sets the crystals field — all other fields remain 0', () => {
-    const result = computeAssaultBattleIncome({ 'Rebel Assault': 'tier1' })
-    const { crystals, ...rest } = result
-    for (const [key, value] of Object.entries(rest)) {
-      expect(value, `${key} should be 0`).toBe(0)
-    }
+  it('returns ZERO_INCOME for tiers with no tracked rewards (Tier I/II/Bonus)', () => {
+    const result = computeAssaultBattleIncome({ 'Fanatical Devotion': 'I' })
+    expect(result).toEqual(ZERO_INCOME)
+  })
+
+  it('returns omega for a standard battle at Mythic', () => {
+    const result = computeAssaultBattleIncome({ 'Fanatical Devotion': 'Mythic' })
+    expect(result.omega).toBe(2)
+    expect(result.crystals).toBe(0)
+  })
+
+  it('accumulates tiers — CTIII includes CTII rewards too', () => {
+    const result = computeAssaultBattleIncome({ 'Fanatical Devotion': 'CTIII' })
+    // CTII gives 5 crystals, CTIII gives 5 more → 10 total
+    expect(result.crystals).toBe(10)
+    // CTIII also includes CTI zeta and Mythic omega
+    expect(result.zeta).toBe(2)
+    expect(result.omega).toBe(2)
   })
 
   it('routes short-tier battles through the short-tier payout table', () => {
-    // Both tables are currently 0, so we just verify the function handles them
-    // without throwing and returns a valid IncomeResult shape
-    const result = computeAssaultBattleIncome({ 'Duel of the Fates': 'tier3' })
-    expect(result).toMatchObject(ZERO_INCOME)
+    const result = computeAssaultBattleIncome({ 'Duel of the Fates': 'III' })
+    expect(result.crystals).toBe(100)
+    expect(result.mk1FusionDisk).toBe(25)
   })
 
   it('routes standard battles through the standard payout table', () => {
-    const result = computeAssaultBattleIncome({ 'Separatist Might': 'challenge3' })
-    expect(result).toMatchObject(ZERO_INCOME)
+    const result = computeAssaultBattleIncome({ 'Fanatical Devotion': 'CTIII' })
+    expect(result).toMatchObject({ omega: 2, zeta: 2 })
   })
 
   it('does not throw for unknown battle names', () => {
