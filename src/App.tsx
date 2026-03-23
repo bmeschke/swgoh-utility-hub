@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import ProtectedRoute from '@/components/protected-route'
 import AdminRoute from '@/components/admin-route'
 import Nav from '@/components/nav'
+import Footer from '@/components/footer'
 import HomePage from '@/routes/HomePage'
 import PackLibraryPage from '@/routes/PackLibraryPage'
 import PackDetailPage from '@/routes/PackDetailPage'
@@ -14,7 +15,9 @@ import NotFoundPage from '@/routes/NotFoundPage'
 export default function App() {
   return (
     <BrowserRouter>
+      <div className="flex min-h-screen flex-col">
       <Nav />
+      <main className="flex-1">
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/pack-library" element={<PackLibraryPage />} />
@@ -46,6 +49,9 @@ export default function App() {
         />
 <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </main>
+      <Footer />
+      </div>
     </BrowserRouter>
   )
 }

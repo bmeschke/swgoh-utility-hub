@@ -1,6 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { SignInButton, UserButton, useAuth } from '@clerk/clerk-react'
 import { Button } from '@/components/ui/button'
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `text-sm transition-colors ${isActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`
 
 export default function Nav() {
   const { isSignedIn, isLoaded } = useAuth()
@@ -12,25 +15,16 @@ export default function Nav() {
           <Link to="/" className="text-sm font-semibold">
             GoH Tools
           </Link>
-          <Link
-            to="/pack-library"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
+          <NavLink to="/pack-library" className={navLinkClass}>
             Pack Library
-          </Link>
-          <Link
-            to="/evaluate-pack"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
+          </NavLink>
+          <NavLink to="/evaluate-pack" className={navLinkClass}>
             Evaluate Pack
-          </Link>
+          </NavLink>
           {isSignedIn && (
-            <Link
-              to="/income"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
+            <NavLink to="/income" className={navLinkClass}>
               Income
-            </Link>
+            </NavLink>
           )}
         </div>
         <div>

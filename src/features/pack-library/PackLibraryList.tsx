@@ -76,7 +76,7 @@ export default function PackLibraryList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative">
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
@@ -88,7 +88,6 @@ export default function PackLibraryList() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Value</span>
           {VALUE_FILTERS.map((f) => (
             <button
               key={f.id}

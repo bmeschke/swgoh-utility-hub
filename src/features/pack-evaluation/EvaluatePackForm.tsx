@@ -73,30 +73,6 @@ export default function EvaluatePackForm() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Label>Items</Label>
-        <ItemCombobox ref={comboboxRef} onAdd={handleAddItem} />
-        {fields.length > 0 && (
-          <div className="space-y-2 mt-2">
-            {fields.map((field, index) => (
-              <PackLineItem
-                key={field.id}
-                name={field.name}
-                crystalValue={field.crystalValue}
-                quantity={watchedItems[index]?.quantity ?? field.quantity}
-                tiers={watchedItems[index]?.tiers}
-                onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
-                onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
-                onRemove={() => remove(index)}
-                inputRef={(el) => { qtyRefs.current[index] = el }}
-                rowRef={(el) => { rowRefs.current[index] = el }}
-                onEnter={() => comboboxRef.current?.openAndFocus()}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
       <div className="space-y-1.5">
         <Label>Pack price</Label>
         <div className="flex items-center gap-2">
@@ -135,6 +111,30 @@ export default function EvaluatePackForm() {
             className="max-w-[160px]"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Items</Label>
+        <ItemCombobox ref={comboboxRef} onAdd={handleAddItem} />
+        {fields.length > 0 && (
+          <div className="space-y-2 mt-2">
+            {fields.map((field, index) => (
+              <PackLineItem
+                key={field.id}
+                name={field.name}
+                crystalValue={field.crystalValue}
+                quantity={watchedItems[index]?.quantity ?? field.quantity}
+                tiers={watchedItems[index]?.tiers}
+                onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
+                onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
+                onRemove={() => remove(index)}
+                inputRef={(el) => { qtyRefs.current[index] = el }}
+                rowRef={(el) => { rowRefs.current[index] = el }}
+                onEnter={() => comboboxRef.current?.openAndFocus()}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {showResult && (

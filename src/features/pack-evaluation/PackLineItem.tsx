@@ -166,7 +166,7 @@ export default function PackLineItem({
         </div>
 
         {tiersActive ? (
-          <span className="w-24 text-center text-sm text-muted-foreground shrink-0">
+          <span className="w-32 text-center text-sm text-muted-foreground shrink-0">
             ~{ev.toFixed(2)}
           </span>
         ) : (
@@ -179,7 +179,7 @@ export default function PackLineItem({
             onChange={handleManualChange}
             onBlur={handleManualBlur}
             onKeyDown={handleManualKeyDown}
-            className="w-24 h-6 text-center text-sm px-1 shrink-0"
+            className="w-32 h-6 text-center text-sm px-1 shrink-0"
           />
         )}
 
@@ -245,7 +245,7 @@ export default function PackLineItem({
                     addTier(localTiers.length) // focus the new tier's prob input
                   }
                 }}
-                className="w-20 h-6 text-center text-xs px-1"
+                className="w-28 h-6 text-center text-xs px-1"
               />
               <Button
                 type="button"
