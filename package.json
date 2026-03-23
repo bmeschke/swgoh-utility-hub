@@ -20,6 +20,7 @@
     "@clerk/clerk-react": "^5.61.4",
     "@fontsource-variable/geist": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
+    "@vercel/analytics": "^2.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
