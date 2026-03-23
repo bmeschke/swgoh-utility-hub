@@ -52,7 +52,7 @@ export default function App() {
       </main>
       <Footer />
       </div>
+      <Analytics />
     </BrowserRouter>
-    <Analytics />
   )
 }
