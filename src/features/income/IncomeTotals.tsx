@@ -69,12 +69,10 @@ function TotalsSection({
 export default function IncomeTotals({ totals }: Props) {
   return (
     <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold">Monthly &amp; Daily Totals</h2>
-        <div className="grid grid-cols-2 gap-x-4 text-xs text-muted-foreground font-medium w-48 text-right">
-          <span>Monthly</span>
-          <span>Daily (avg)</span>
-        </div>
+      <div className="grid grid-cols-3 gap-x-4 text-xs text-muted-foreground font-medium">
+        <span className="text-sm font-semibold text-foreground">Monthly &amp; Daily Totals</span>
+        <span className="text-right">Monthly</span>
+        <span className="text-right">Daily (avg)</span>
       </div>
       <TotalsSection heading="Currency" rows={CURRENCY_ROWS} totals={totals} />
       <div className="border-t" />

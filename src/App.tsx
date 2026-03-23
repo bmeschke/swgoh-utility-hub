@@ -9,6 +9,7 @@ import PackDetailPage from '@/routes/PackDetailPage'
 import EvaluatePackPage from '@/routes/EvaluatePackPage'
 import PlanningPage from '@/routes/PlanningPage'
 import IncomePage from '@/routes/IncomePage'
+import IncomeBetaPage from '@/routes/IncomeBetaPage'
 import AdminItemsPage from '@/routes/AdminItemsPage'
 import NotFoundPage from '@/routes/NotFoundPage'
 
@@ -28,6 +29,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <IncomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/income-beta"
+          element={
+            <ProtectedRoute>
+              <IncomeBetaPage />
             </ProtectedRoute>
           }
         />

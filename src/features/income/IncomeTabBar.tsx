@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 export type IncomeTab =
-  | 'crystalIncome'
+  | 'grandArena'
   | 'assaultBattles'
   | 'territoryBattles'
   | 'raidRewards'
@@ -10,7 +10,7 @@ export type IncomeTab =
   | 'specialEvents'
 
 const TABS: { id: IncomeTab; label: string }[] = [
-  { id: 'crystalIncome', label: 'Crystal Income' },
+  { id: 'grandArena', label: 'Grand Arena' },
   { id: 'assaultBattles', label: 'Assault Battles' },
   { id: 'territoryBattles', label: 'Territory Battles' },
   { id: 'raidRewards', label: 'Raid Rewards' },
