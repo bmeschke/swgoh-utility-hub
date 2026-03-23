@@ -1,9 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from '@/components/protected-route'
 import AdminRoute from '@/components/admin-route'
 import Nav from '@/components/nav'
 import Footer from '@/components/footer'
-import HomePage from '@/routes/HomePage'
 import PackLibraryPage from '@/routes/PackLibraryPage'
 import PackDetailPage from '@/routes/PackDetailPage'
 import EvaluatePackPage from '@/routes/EvaluatePackPage'
@@ -19,7 +18,7 @@ export default function App() {
       <Nav />
       <main className="flex-1">
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Navigate to="/pack-library" replace />} />
         <Route path="/pack-library" element={<PackLibraryPage />} />
         <Route path="/pack-library/:packId" element={<PackDetailPage />} />
         <Route path="/evaluate-pack" element={<EvaluatePackPage />} />
