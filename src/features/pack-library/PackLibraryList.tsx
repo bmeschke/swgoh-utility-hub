@@ -61,11 +61,13 @@ export default function PackLibraryList() {
     return <p className="text-muted-foreground">Loading...</p>
   }
 
-  const filtered = packs.filter((pack) => {
-    const matchesSearch = pack.name.toLowerCase().includes(search.toLowerCase())
-    const matchesValue = matchesFilter(getPct(pack), valueFilter)
-    return matchesSearch && matchesValue
-  })
+  const filtered = packs
+    .filter((pack) => {
+      const matchesSearch = pack.name.toLowerCase().includes(search.toLowerCase())
+      const matchesValue = matchesFilter(getPct(pack), valueFilter)
+      return matchesSearch && matchesValue
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
 
   return (
     <div className="space-y-6">

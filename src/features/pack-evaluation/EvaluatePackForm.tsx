@@ -60,18 +60,13 @@ export default function EvaluatePackForm() {
   }, [fields.length])
 
   function handleAddItem(item: Doc<'items'>) {
-    const existingIndex = fields.findIndex((f) => f.itemId === item._id)
-    if (existingIndex >= 0) {
-      setValue(`items.${existingIndex}.quantity`, watchedItems[existingIndex].quantity + 1)
-    } else {
-      pendingFocusIndex.current = fields.length
-      append({
-        itemId: item._id,
-        name: item.name,
-        crystalValue: item.crystalValue,
-        quantity: 0,
-      })
-    }
+    pendingFocusIndex.current = fields.length
+    append({
+      itemId: item._id,
+      name: item.name,
+      crystalValue: item.crystalValue,
+      quantity: 0,
+    })
   }
 
   return (

@@ -147,6 +147,10 @@ export default function PackDetail({ packId }: PackDetailProps) {
               groups.get(key)!.push(item)
             }
             // Sort groups by canonical order; unknowns go to the end
+            // Sort items within each group by descending total crystal value
+            for (const items of groups.values()) {
+              items.sort((a, b) => (b.crystalValue * b.quantity) - (a.crystalValue * a.quantity))
+            }
             const sorted = Array.from(groups.entries()).sort(([a], [b]) => {
               const ai = CATEGORY_ORDER.indexOf(a)
               const bi = CATEGORY_ORDER.indexOf(b)
