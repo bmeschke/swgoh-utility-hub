@@ -217,14 +217,14 @@ export default function PackDetail({ packId }: PackDetailProps) {
           ) : (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Regular pricing</span>
+                <span className="text-muted-foreground">Expected standard price</span>
                 <span className="flex items-center gap-2">
                   ${regularValue.toFixed(2)}
                   <GainBadge pct={regularPct} />
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Holiday pricing</span>
+                <span className="text-muted-foreground">Expected holiday price</span>
                 <span className="flex items-center gap-2">
                   ${holidayValue.toFixed(2)}
                   <GainBadge pct={regularPct} label={`+${holidayPct.toFixed(1)}%`} />
