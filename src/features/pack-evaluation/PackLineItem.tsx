@@ -19,6 +19,7 @@ interface PackLineItemProps {
   onTiersChange: (tiers: ProbabilityTier[] | undefined) => void
   onRemove: () => void
   inputRef?: (el: HTMLInputElement | null) => void
+  rowRef?: (el: HTMLDivElement | null) => void
   onEnter?: () => void
 }
 
@@ -50,6 +51,7 @@ export default function PackLineItem({
   onTiersChange,
   onRemove,
   inputRef,
+  rowRef,
   onEnter,
 }: PackLineItemProps) {
   const hasPropTiers = tiers && tiers.length > 0
@@ -151,7 +153,7 @@ export default function PackLineItem({
   }
 
   return (
-    <div className="rounded-lg border bg-muted/20">
+    <div ref={rowRef} className="rounded-lg border bg-muted/20">
       {/* Main row */}
       <div className="flex items-center gap-3 px-3 py-2">
         <div className="flex-1 min-w-0">

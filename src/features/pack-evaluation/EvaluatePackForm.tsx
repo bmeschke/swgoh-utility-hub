@@ -44,13 +44,15 @@ export default function EvaluatePackForm() {
   // Refs for focus management
   const comboboxRef = useRef<ItemComboboxHandle>(null)
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([])
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([])
   const pendingFocusIndex = useRef<number | null>(null)
 
-  // Focus the qty input of a newly appended item
+  // Focus and scroll the newly appended item into view
   useEffect(() => {
     if (pendingFocusIndex.current !== null) {
       const idx = pendingFocusIndex.current
       pendingFocusIndex.current = null
+      rowRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       const input = qtyRefs.current[idx]
       if (input) {
         input.focus()
@@ -87,6 +89,7 @@ export default function EvaluatePackForm() {
                 onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
                 onRemove={() => remove(index)}
                 inputRef={(el) => { qtyRefs.current[index] = el }}
+                rowRef={(el) => { rowRefs.current[index] = el }}
                 onEnter={() => comboboxRef.current?.openAndFocus()}
               />
             ))}
