@@ -11,6 +11,6 @@ describe('HomePage', () => {
         <HomePage />
       </MemoryRouter>
     )
-    expect(screen.getByText('Galaxy Tools')).toBeInTheDocument()
+    expect(screen.getByText('GoH Tools')).toBeInTheDocument()
   })
 })

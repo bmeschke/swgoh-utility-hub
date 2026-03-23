@@ -10,7 +10,7 @@ export default function Nav() {
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="text-sm font-semibold">
-            Galaxy Tools
+            GoH Tools
           </Link>
           <Link
             to="/pack-library"
