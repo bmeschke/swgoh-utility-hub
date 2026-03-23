@@ -137,7 +137,7 @@ describe('computeAssaultBattleIncome', () => {
 
   it('does not throw for unknown battle names', () => {
     expect(() =>
-      computeAssaultBattleIncome({ 'Unknown Battle': 'tier1' })
+      computeAssaultBattleIncome({ 'Unknown Battle': 'I' })
     ).not.toThrow()
   })
 })
