@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
+import { useUser } from '@clerk/clerk-react'
 import { api } from '../../../convex/_generated/api'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -53,7 +54,11 @@ function matchesFilter(pct: number, filter: ValueFilter): boolean {
 }
 
 export default function PackLibraryList() {
-  const packs = useQuery(api.packs.listPublished)
+  const { user } = useUser()
+  const isAdmin = user?.id === import.meta.env.VITE_ADMIN_USER_ID
+  const publishedPacks = useQuery(api.packs.listPublished, isAdmin ? 'skip' : {})
+  const allPacks = useQuery(api.packs.listAll, isAdmin ? {} : 'skip')
+  const packs = isAdmin ? allPacks : publishedPacks
   const [search, setSearch] = useState('')
   const [valueFilter, setValueFilter] = useState<ValueFilter>(null)
 
@@ -106,7 +111,7 @@ export default function PackLibraryList() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((pack) => (
-            <PackCard key={pack._id} pack={pack} />
+            <PackCard key={pack._id} pack={pack} showUnpublished={isAdmin} />
           ))}
         </div>
       )}

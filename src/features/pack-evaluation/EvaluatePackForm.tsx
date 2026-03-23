@@ -65,7 +65,7 @@ export default function EvaluatePackForm() {
       itemId: item._id,
       name: item.name,
       crystalValue: item.crystalValue,
-      quantity: 0,
+      quantity: 1,
     })
   }
 

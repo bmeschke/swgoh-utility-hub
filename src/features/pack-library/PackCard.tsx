@@ -15,9 +15,10 @@ import {
 
 interface PackCardProps {
   pack: Doc<'packs'>
+  showUnpublished?: boolean
 }
 
-export default function PackCard({ pack }: PackCardProps) {
+export default function PackCard({ pack, showUnpublished }: PackCardProps) {
   const isCrystalPack = pack.priceCurrency === 'crystals'
 
   const pct = isCrystalPack
@@ -34,14 +35,17 @@ export default function PackCard({ pack }: PackCardProps) {
   const holidayValue = calcDollarValue(pack.crystalEquivalent, 'holiday')
   const hasRolledItems = pack.items.some((i) => i.tiers && i.tiers.length > 0)
 
+  const isUnpublished = showUnpublished && !pack.published
+
   return (
     <Link to={`/pack-library/${pack._id}`}>
-      <Card className={`hover:bg-muted/30 transition-colors cursor-pointer h-full overflow-hidden border ${getValueBorderClass(pct)}`}>
+      <Card className={`hover:bg-muted/30 transition-colors cursor-pointer h-full overflow-hidden border ${getValueBorderClass(pct)} ${isUnpublished ? 'opacity-50' : ''}`}>
         {/* Pull header flush with top of card by negating Card's pt-4 */}
         <CardHeader className={`-mt-4 pt-4 pb-3 ${getValueHeaderBgClass(pct)}`}>
           <CardTitle className="text-sm font-semibold line-clamp-2 flex items-center gap-1.5">
             {pack.name}
             {hasRolledItems && <Dices className="size-3.5 shrink-0 opacity-70" />}
+            {isUnpublished && <span className="text-xs font-normal text-muted-foreground">(unpublished)</span>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 text-sm pt-3">

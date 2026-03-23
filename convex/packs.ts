@@ -21,6 +21,15 @@ export const listPublished = query({
   },
 })
 
+/** Admin: list all packs including unpublished */
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx)
+    return await ctx.db.query('packs').take(500)
+  },
+})
+
 /** Public: get a single pack with full item details joined */
 export const get = query({
   args: { id: v.id('packs') },
