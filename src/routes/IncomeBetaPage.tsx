@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useUser } from '@clerk/clerk-react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { sumIncome, computeAssaultBattleIncome } from '@/lib/income'
@@ -14,17 +15,27 @@ import ConquestSection from '@/features/income/sections/ConquestSection'
 import SpecialEventsSection from '@/features/income/sections/SpecialEventsSection'
 
 export default function IncomeBetaPage() {
+  const { isSignedIn } = useUser()
   const [activeTab, setActiveTab] = useState<IncomeTab>('grandArena')
+  const [localAssaultInputs, setLocalAssaultInputs] = useState<AssaultBattleInputs>({})
+
+  // These hooks are always called; they return null/no-op when unauthenticated
   const profile = useQuery(api.income.get)
   const upsert = useMutation(api.income.upsert)
 
-  const assaultInputs: AssaultBattleInputs = profile?.assaultBattles ?? {}
-
-  const total = sumIncome(computeAssaultBattleIncome(assaultInputs))
+  const assaultInputs: AssaultBattleInputs = isSignedIn
+    ? (profile?.assaultBattles ?? {})
+    : localAssaultInputs
 
   function saveAssaultBattles(inputs: AssaultBattleInputs) {
-    upsert({ assaultBattles: inputs })
+    if (isSignedIn) {
+      upsert({ assaultBattles: inputs })
+    } else {
+      setLocalAssaultInputs(inputs)
+    }
   }
+
+  const total = sumIncome(computeAssaultBattleIncome(assaultInputs))
 
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-6">
@@ -32,6 +43,12 @@ export default function IncomeBetaPage() {
         <h1 className="text-2xl font-bold">Income Calculator</h1>
         <span className="text-sm text-muted-foreground">beta</span>
       </div>
+
+      {!isSignedIn && (
+        <p className="text-sm text-muted-foreground border rounded px-3 py-2">
+          Sign in to save your selections across sessions.
+        </p>
+      )}
 
       <IncomeTabBar active={activeTab} onChange={setActiveTab} />
 

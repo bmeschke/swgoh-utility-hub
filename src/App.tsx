@@ -32,14 +32,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/income-beta"
-          element={
-            <ProtectedRoute>
-              <IncomeBetaPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/income-beta" element={<IncomeBetaPage />} />
         <Route
           path="/planning/*"
           element={
