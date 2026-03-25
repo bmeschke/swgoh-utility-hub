@@ -39,7 +39,7 @@ export default function PackValueResult({
   items,
 }: PackValueResultProps) {
   const { user } = useUser()
-  const isAdmin = user?.id === import.meta.env.VITE_ADMIN_USER_ID
+  const isAdmin = !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const isCrystalPack = priceCurrency === 'crystals'

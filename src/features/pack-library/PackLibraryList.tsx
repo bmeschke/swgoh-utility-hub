@@ -55,7 +55,7 @@ function matchesFilter(pct: number, filter: ValueFilter): boolean {
 
 export default function PackLibraryList() {
   const { user } = useUser()
-  const isAdmin = user?.id === import.meta.env.VITE_ADMIN_USER_ID
+  const isAdmin = !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
   const publishedPacks = useQuery(api.packs.listPublished, isAdmin ? 'skip' : {})
   const allPacks = useQuery(api.packs.listAll, isAdmin ? {} : 'skip')
   const packs = isAdmin ? allPacks : publishedPacks

@@ -68,7 +68,7 @@ function GainBadge({ pct, label: labelOverride }: { pct: number; label?: string 
 export default function PackDetail({ packId }: PackDetailProps) {
   const navigate = useNavigate()
   const { user } = useUser()
-  const isAdmin = user?.id === import.meta.env.VITE_ADMIN_USER_ID
+  const isAdmin = !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
   const [isEditing, setIsEditing] = useState(false)
 
   const pack = useQuery(api.packs.get, { id: packId })
