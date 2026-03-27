@@ -1,19 +1,60 @@
 import { defineSchema, defineTable } from 'convex/server'
+import { rateLimitTables } from 'convex-helpers/server/rateLimit'
 import { v } from 'convex/values'
 
+// ─── Income profile validators ───────────────────────────────────────────────
+
+const standardABTier = v.union(
+  v.literal('none'),
+  v.literal('I'),
+  v.literal('II'),
+  v.literal('Bonus'),
+  v.literal('Mythic'),
+  v.literal('CTI'),
+  v.literal('CTII'),
+  v.literal('CTIII')
+)
+
+const shortABTier = v.union(
+  v.literal('none'),
+  v.literal('I'),
+  v.literal('II'),
+  v.literal('III'),
+  v.literal('IV'),
+  v.literal('V'),
+  v.literal('VI')
+)
+
+const assaultBattlesValidator = v.object({
+  'Fanatical Devotion': v.optional(standardABTier),
+  'Forest Moon': v.optional(standardABTier),
+  'Ground War': v.optional(standardABTier),
+  'Military Might': v.optional(standardABTier),
+  'Places of Power': v.optional(standardABTier),
+  'Rebel Roundup': v.optional(standardABTier),
+  'Secrets and Shadows': v.optional(standardABTier),
+  'Peridea Patrol': v.optional(shortABTier),
+  'Duel of the Fates': v.optional(shortABTier),
+})
+
+// Placeholder sections: constrained to string keys -> string | number values.
+// Replace with strict validators when each section is implemented.
+const placeholderSectionValidator = v.record(v.string(), v.union(v.string(), v.number()))
+
 export default defineSchema({
+  ...rateLimitTables,
+
   incomeProfiles: defineTable({
     userId: v.string(),
     updatedAt: v.number(),
-    crystalIncome: v.optional(v.any()),
-    assaultBattles: v.optional(v.any()),
-    territoryBattles: v.optional(v.any()),
-    raidRewards: v.optional(v.any()),
-    territoryWar: v.optional(v.any()),
-    conquest: v.optional(v.any()),
-    specialEvents: v.optional(v.any()),
+    crystalIncome: v.optional(placeholderSectionValidator),
+    assaultBattles: v.optional(assaultBattlesValidator),
+    territoryBattles: v.optional(placeholderSectionValidator),
+    raidRewards: v.optional(placeholderSectionValidator),
+    territoryWar: v.optional(placeholderSectionValidator),
+    conquest: v.optional(placeholderSectionValidator),
+    specialEvents: v.optional(placeholderSectionValidator),
   }).index('by_userId', ['userId']),
-
 
   items: defineTable({
     name: v.string(),
@@ -31,9 +72,7 @@ export default defineSchema({
       v.object({
         itemId: v.id('items'),
         quantity: v.number(), // effective quantity (EV when tiers present)
-        tiers: v.optional(
-          v.array(v.object({ probability: v.number(), quantity: v.number() }))
-        ),
+        tiers: v.optional(v.array(v.object({ probability: v.number(), quantity: v.number() }))),
       })
     ),
     crystalEquivalent: v.number(),

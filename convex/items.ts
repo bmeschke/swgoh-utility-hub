@@ -1,6 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { internalMutation, mutation, query } from './_generated/server'
 import { requireAdmin } from './lib/adminCheck'
+import { rateLimit } from './lib/rateLimits'
 import { SEED_ITEMS } from './seeds/itemSeedData'
 
 /** Public: returns all active items (for evaluation typeahead) */
@@ -14,14 +15,11 @@ export const list = query({
   },
 })
 
-/** Admin: returns all items including inactive. Returns null if not authenticated. */
+/** Admin: returns all items including inactive */
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return null
-    const adminId = process.env.ADMIN_USER_ID
-    if (!adminId || identity.subject !== adminId) return null
+    await requireAdmin(ctx)
     return await ctx.db.query('items').take(500)
   },
 })
@@ -34,7 +32,8 @@ export const create = mutation({
     crystalValue: v.number(),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
     return await ctx.db.insert('items', {
       name: args.name,
       category: args.category,
@@ -53,7 +52,8 @@ export const update = mutation({
     crystalValue: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
     const { id, ...fields } = args
     const updates: Record<string, unknown> = {}
     if (fields.name !== undefined) updates.name = fields.name
@@ -67,7 +67,8 @@ export const update = mutation({
 export const toggleActive = mutation({
   args: { id: v.id('items') },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
     const item = await ctx.db.get(args.id)
     if (!item) throw new ConvexError('Item not found')
     await ctx.db.patch(args.id, { isActive: !item.isActive })
@@ -83,9 +84,7 @@ export const seedItems = internalMutation({
         .query('items')
         .withSearchIndex('search_name', (q) => q.search('name', seed.name))
         .take(5)
-      const duplicate = existing.find(
-        (i) => i.name.toLowerCase() === seed.name.toLowerCase()
-      )
+      const duplicate = existing.find((i) => i.name.toLowerCase() === seed.name.toLowerCase())
       if (!duplicate) {
         await ctx.db.insert('items', {
           name: seed.name,
@@ -121,7 +120,8 @@ export const internalSeed = internalMutation({
 export const triggerSeed = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
     // Check if items already exist
     const existing = await ctx.db.query('items').take(1)
     if (existing.length > 0) {

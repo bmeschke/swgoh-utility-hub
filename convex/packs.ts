@@ -1,6 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { requireAdmin } from './lib/adminCheck'
+import { rateLimit } from './lib/rateLimits'
 
 const tierValidator = v.object({ probability: v.number(), quantity: v.number() })
 
@@ -65,7 +66,8 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
 
     let crystalEquivalent = 0
     for (const line of args.items) {
@@ -97,7 +99,8 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
     const { id, items, ...rest } = args
     const updates: Record<string, unknown> = { ...rest }
 
@@ -120,7 +123,8 @@ export const update = mutation({
 export const togglePublished = mutation({
   args: { id: v.id('packs') },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
     const pack = await ctx.db.get(args.id)
     if (!pack) throw new ConvexError('Pack not found')
     await ctx.db.patch(args.id, { published: !pack.published })
@@ -131,7 +135,8 @@ export const togglePublished = mutation({
 export const deletePack = mutation({
   args: { id: v.id('packs') },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx)
+    const identity = await requireAdmin(ctx)
+    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
     const pack = await ctx.db.get(args.id)
     if (!pack) throw new ConvexError('Pack not found')
     await ctx.db.delete(args.id)
