@@ -58,23 +58,6 @@ interface EditPackFormProps {
   onSaved: () => void
 }
 
-/** Convert a stored SAB tier (with server-enriched options) back to draft state for editing */
-function sabTiersToDraft(sabTiers: Doc<'packs'>['sabTiers']): SabTierDraft[] {
-  if (!sabTiers || sabTiers.length === 0) return DEFAULT_SAB_TIERS
-  const drafts: SabTierDraft[] = sabTiers.map((tier) => ({
-    price: String(tier.price),
-    items: tier.items.map((li) => ({
-      itemId: li.itemId,
-      name: '…', // will be replaced by enriched data below
-      crystalValue: 0,
-      quantity: li.quantity,
-    })),
-  }))
-  // Pad to 3 tiers
-  while (drafts.length < 3) drafts.push({ price: '', items: [] })
-  return drafts
-}
-
 function sabDiscountsToDraft(sabDiscounts: Doc<'packs'>['sabDiscounts']): SabDiscount[] {
   if (!sabDiscounts || sabDiscounts.length === 0) return DEFAULT_SAB_DISCOUNTS
   return [1, 2, 3].map((q) => {
@@ -112,23 +95,29 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
     sabDiscountsToDraft(pack.sabDiscounts)
   )
 
-  const { control, register, watch, setValue, handleSubmit, formState: { errors, isSubmitting } } =
-    useForm<FormValues>({
-      resolver: zodResolver(schema) as never,
-      defaultValues: {
-        name: pack.name,
-        notes: pack.notes ?? '',
-        items: pack.itemsWithDetails.map((i) => ({
-          itemId: i.itemId,
-          name: i.name,
-          crystalValue: i.crystalValue,
-          quantity: i.quantity,
-          tiers: i.tiers,
-        })),
-        price: String(pack.price),
-        priceCurrency: (pack.priceCurrency ?? 'usd') as PriceCurrency,
-      },
-    })
+  const {
+    control,
+    register,
+    watch,
+    setValue,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema) as never,
+    defaultValues: {
+      name: pack.name,
+      notes: pack.notes ?? '',
+      items: pack.itemsWithDetails.map((i) => ({
+        itemId: i.itemId,
+        name: i.name,
+        crystalValue: i.crystalValue,
+        quantity: i.quantity,
+        tiers: i.tiers,
+      })),
+      price: String(pack.price),
+      priceCurrency: (pack.priceCurrency ?? 'usd') as PriceCurrency,
+    },
+  })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
 
@@ -147,7 +136,10 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
       const idx = pendingFocusIndex.current
       pendingFocusIndex.current = null
       const input = qtyRefs.current[idx]
-      if (input) { input.focus(); input.select() }
+      if (input) {
+        input.focus()
+        input.select()
+      }
     }
   }, [fields.length])
 
@@ -244,7 +236,9 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
                     onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
                     onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
                     onRemove={() => remove(index)}
-                    inputRef={(el) => { qtyRefs.current[index] = el }}
+                    inputRef={(el) => {
+                      qtyRefs.current[index] = el
+                    }}
                     onEnter={() => comboboxRef.current?.openAndFocus()}
                   />
                 ))}
@@ -261,7 +255,9 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
                   onClick={() => setValue('priceCurrency', 'usd')}
                   className={cn(
                     'px-3 py-1 transition-colors',
-                    priceCurrency === 'usd' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                    priceCurrency === 'usd'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
                   )}
                 >
                   $ USD
@@ -271,7 +267,9 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
                   onClick={() => setValue('priceCurrency', 'crystals')}
                   className={cn(
                     'px-3 py-1 border-l transition-colors',
-                    priceCurrency === 'crystals' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                    priceCurrency === 'crystals'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
                   )}
                 >
                   ✦ Crystals
@@ -290,11 +288,17 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
 
           {crystalEquivalent > 0 && (
             <p className="text-sm text-muted-foreground">
-              Crystal equivalent: <span className="font-medium text-foreground">{crystalEquivalent.toLocaleString()}✦</span>
+              Crystal equivalent:{' '}
+              <span className="font-medium text-foreground">
+                {crystalEquivalent.toLocaleString()}✦
+              </span>
               {price > 0 && (
                 <span className="ml-3">
-                  Price: <span className="font-medium text-foreground">
-                    {priceCurrency === 'usd' ? `$${price.toFixed(2)}` : `${price.toLocaleString()}✦`}
+                  Price:{' '}
+                  <span className="font-medium text-foreground">
+                    {priceCurrency === 'usd'
+                      ? `$${price.toFixed(2)}`
+                      : `${price.toLocaleString()}✦`}
                   </span>
                 </span>
               )}
@@ -305,7 +309,10 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
         <SabPackBuilder
           tiers={sabTiers}
           discounts={sabDiscounts}
-          onChange={(t, d) => { setSabTiers(t); setSabDiscounts(d) }}
+          onChange={(t, d) => {
+            setSabTiers(t)
+            setSabDiscounts(d)
+          }}
         />
       )}
 
