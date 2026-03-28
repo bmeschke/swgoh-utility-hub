@@ -26,10 +26,7 @@ const shortABTier = v.union(
 
 // v.record() is used instead of v.object() because battle names contain
 // spaces, which Convex rejects as object field identifiers.
-const assaultBattlesValidator = v.record(
-  v.string(),
-  v.union(standardABTier, shortABTier)
-)
+const assaultBattlesValidator = v.record(v.string(), v.union(standardABTier, shortABTier))
 
 // Placeholder sections: constrained to string keys -> string | number values.
 // Replace with strict validators when each section is implemented.
@@ -42,7 +39,7 @@ export default defineSchema({
     key: v.optional(v.string()),
     value: v.number(),
     ts: v.number(),
-  }).index('name_key', ['name', 'key']),
+  }).index('name', ['name', 'key']),
 
   incomeProfiles: defineTable({
     userId: v.string(),
@@ -81,18 +78,28 @@ export default defineSchema({
     published: v.boolean(),
     notes: v.optional(v.string()),
     // SAB-specific fields
-    sabTiers: v.optional(v.array(v.object({
-      price: v.number(),
-      crystalEquivalent: v.number(),
-      items: v.array(v.object({
-        itemId: v.id('items'),
-        quantity: v.number(),
-      })),
-    }))),
-    sabDiscounts: v.optional(v.array(v.object({
-      quantity: v.number(),
-      discountAmount: v.number(),
-    }))),
+    sabTiers: v.optional(
+      v.array(
+        v.object({
+          price: v.number(),
+          crystalEquivalent: v.number(),
+          items: v.array(
+            v.object({
+              itemId: v.id('items'),
+              quantity: v.number(),
+            })
+          ),
+        })
+      )
+    ),
+    sabDiscounts: v.optional(
+      v.array(
+        v.object({
+          quantity: v.number(),
+          discountAmount: v.number(),
+        })
+      )
+    ),
   })
     .index('by_published', ['published'])
     .searchIndex('search_name', { searchField: 'name' }),
