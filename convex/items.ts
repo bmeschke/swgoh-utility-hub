@@ -33,7 +33,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
     return await ctx.db.insert('items', {
       name: args.name,
       category: args.category,
@@ -53,7 +53,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
     const { id, ...fields } = args
     const updates: Record<string, unknown> = {}
     if (fields.name !== undefined) updates.name = fields.name
@@ -68,7 +68,7 @@ export const toggleActive = mutation({
   args: { id: v.id('items') },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
     const item = await ctx.db.get(args.id)
     if (!item) throw new ConvexError('Item not found')
     await ctx.db.patch(args.id, { isActive: !item.isActive })
@@ -121,7 +121,7 @@ export const triggerSeed = mutation({
   args: {},
   handler: async (ctx) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
     // Check if items already exist
     const existing = await ctx.db.query('items').take(1)
     if (existing.length > 0) {

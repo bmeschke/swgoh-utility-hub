@@ -140,7 +140,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
 
     if (args.packType === 'sab' && args.sabTiers) {
       const { enrichedTiers, avgCE } = await computeSabFields(ctx, args.sabTiers)
@@ -194,7 +194,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
     const { id, items, sabTiers, ...rest } = args
     const updates: Record<string, unknown> = { ...rest }
 
@@ -224,7 +224,7 @@ export const togglePublished = mutation({
   args: { id: v.id('packs') },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
     const pack = await ctx.db.get(args.id)
     if (!pack) throw new ConvexError('Pack not found')
     await ctx.db.patch(args.id, { published: !pack.published })
@@ -236,7 +236,7 @@ export const deletePack = mutation({
   args: { id: v.id('packs') },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
-    await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
+    await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
     const pack = await ctx.db.get(args.id)
     if (!pack) throw new ConvexError('Pack not found')
     await ctx.db.delete(args.id)
