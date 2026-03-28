@@ -56,9 +56,7 @@ export default function EvaluatePackForm() {
   const sabTotalPrice = calcSabTotalPrice(sabTiers)
 
   const showResult =
-    packType === 'standard'
-      ? watchedItems.length > 0
-      : sabTiers.some((t) => t.items.length > 0)
+    packType === 'standard' ? watchedItems.length > 0 : sabTiers.some((t) => t.items.length > 0)
 
   const comboboxRef = useRef<ItemComboboxHandle>(null)
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -71,7 +69,10 @@ export default function EvaluatePackForm() {
       pendingFocusIndex.current = null
       rowRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       const input = qtyRefs.current[idx]
-      if (input) { input.focus(); input.select() }
+      if (input) {
+        input.focus()
+        input.select()
+      }
     }
   }, [fields.length])
 
@@ -82,7 +83,6 @@ export default function EvaluatePackForm() {
 
   return (
     <div className="space-y-6">
-
       {/* Pack type toggle */}
       <div className="space-y-1.5">
         <Label>Pack type</Label>
@@ -121,7 +121,9 @@ export default function EvaluatePackForm() {
                   onClick={() => setValue('priceCurrency', 'usd')}
                   className={cn(
                     'px-3 py-1 transition-colors',
-                    priceCurrency === 'usd' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                    priceCurrency === 'usd'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
                   )}
                 >
                   $ USD
@@ -131,20 +133,29 @@ export default function EvaluatePackForm() {
                   onClick={() => setValue('priceCurrency', 'crystals')}
                   className={cn(
                     'px-3 py-1 border-l transition-colors',
-                    priceCurrency === 'crystals' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                    priceCurrency === 'crystals'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
                   )}
                 >
                   ✦ Crystals
                 </button>
               </div>
-              <Input
-                type="number"
-                min={0}
-                step={priceCurrency === 'usd' ? 0.01 : 1}
-                placeholder={priceCurrency === 'usd' ? 'e.g. 9.99' : 'e.g. 800'}
-                {...register('price')}
-                className="max-w-[160px]"
-              />
+              <div className="relative">
+                {priceCurrency === 'usd' && (
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    $
+                  </span>
+                )}
+                <Input
+                  type="number"
+                  min={0}
+                  step={priceCurrency === 'usd' ? 0.01 : 1}
+                  placeholder={priceCurrency === 'usd' ? '0.00' : 'e.g. 800'}
+                  {...register('price')}
+                  className={cn('max-w-[160px]', priceCurrency === 'usd' && 'pl-6')}
+                />
+              </div>
             </div>
           </div>
 
@@ -163,8 +174,12 @@ export default function EvaluatePackForm() {
                     onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
                     onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
                     onRemove={() => remove(index)}
-                    inputRef={(el) => { qtyRefs.current[index] = el }}
-                    rowRef={(el) => { rowRefs.current[index] = el }}
+                    inputRef={(el) => {
+                      qtyRefs.current[index] = el
+                    }}
+                    rowRef={(el) => {
+                      rowRefs.current[index] = el
+                    }}
                     onEnter={() => comboboxRef.current?.openAndFocus()}
                   />
                 ))}
@@ -176,7 +191,10 @@ export default function EvaluatePackForm() {
         <SabPackBuilder
           tiers={sabTiers}
           discounts={sabDiscounts}
-          onChange={(t, d) => { setSabTiers(t); setSabDiscounts(d) }}
+          onChange={(t, d) => {
+            setSabTiers(t)
+            setSabDiscounts(d)
+          }}
         />
       )}
 
