@@ -11,6 +11,7 @@ import {
   getValueBorderClass,
   getValueHeaderBgClass,
   getValueRowBgClass,
+  calcSabTotalPriceFromTiers,
 } from '@/lib/valuations'
 
 interface PackCardProps {
@@ -19,55 +20,80 @@ interface PackCardProps {
 }
 
 export default function PackCard({ pack, showUnpublished }: PackCardProps) {
-  const isCrystalPack = pack.priceCurrency === 'crystals'
+  const isSab = pack.packType === 'sab'
+  const isCrystalPack = !isSab && pack.priceCurrency === 'crystals'
+
+  // For SABs: use avg CE (stored as crystalEquivalent) vs total all-tier price
+  const sabTotalPrice = isSab && pack.sabTiers ? calcSabTotalPriceFromTiers(pack.sabTiers) : 0
+  const effectivePrice = isSab ? sabTotalPrice : pack.price
 
   const pct = isCrystalPack
     ? calcGainLossPercent(pack.crystalEquivalent, pack.price)
-    : calcGainLossPercent(calcDollarValue(pack.crystalEquivalent, 'regular'), pack.price)
+    : calcGainLossPercent(calcDollarValue(pack.crystalEquivalent, 'regular'), effectivePrice)
 
   const label = getRecommendationLabel(pct)
   const sign = pct >= 0 ? '+' : ''
-  const priceDisplay = isCrystalPack
-    ? `${pack.price.toLocaleString()}✦`
-    : `$${pack.price.toFixed(2)}`
 
   const standardValue = calcDollarValue(pack.crystalEquivalent, 'regular')
   const holidayValue = calcDollarValue(pack.crystalEquivalent, 'holiday')
   const hasRolledItems = pack.items.some((i) => i.tiers && i.tiers.length > 0)
-
   const isUnpublished = showUnpublished && !pack.published
 
   return (
     <Link to={`/pack-library/${pack._id}`}>
       <Card className={`hover:bg-muted/30 transition-colors cursor-pointer h-full overflow-hidden border ${getValueBorderClass(pct)} ${isUnpublished ? 'opacity-50' : ''}`}>
-        {/* Pull header flush with top of card by negating Card's pt-4 */}
         <CardHeader className={`-mt-4 pt-4 pb-3 ${getValueHeaderBgClass(pct)}`}>
           <CardTitle className="text-sm font-semibold line-clamp-2 flex items-center gap-1.5">
             {pack.name}
+            {isSab && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-semibold">
+                SAB
+              </Badge>
+            )}
             {hasRolledItems && <Dices className="size-3.5 shrink-0 opacity-70" />}
             {isUnpublished && <span className="text-xs font-normal text-muted-foreground">(unpublished)</span>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 text-sm pt-3">
-          <div className="flex justify-between text-muted-foreground">
-            <span>Price</span>
-            <span>{priceDisplay}</span>
-          </div>
 
-          {isCrystalPack ? (
+          {isSab ? (
             <>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Price Range</span>
+                <span>
+                  ${pack.price.toFixed(2)}
+                  {sabTotalPrice > pack.price && ` – $${sabTotalPrice.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Avg Standard Value</span>
+                <span>${standardValue.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Avg Holiday Value</span>
+                <span>${holidayValue.toFixed(2)}</span>
+              </div>
+            </>
+          ) : isCrystalPack ? (
+            <>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Price</span>
+                <span>{pack.price.toLocaleString()}✦</span>
+              </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Crystal Value</span>
                 <span>{pack.crystalEquivalent.toLocaleString()}✦</span>
               </div>
-              {/* Spacer to align value row with dollar packs that have two value rows */}
               <div className="flex justify-between text-muted-foreground invisible">
-                <span>—</span>
-                <span>—</span>
+                <span>—</span><span>—</span>
               </div>
             </>
           ) : (
             <>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Price</span>
+                <span>${pack.price.toFixed(2)}</span>
+              </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Standard Value</span>
                 <span>${standardValue.toFixed(2)}</span>
@@ -80,7 +106,9 @@ export default function PackCard({ pack, showUnpublished }: PackCardProps) {
           )}
 
           <div className={`flex justify-between items-center px-2 py-1 rounded-md -mx-2 ${getValueRowBgClass(pct)}`}>
-            <span className="text-muted-foreground">Value</span>
+            <span className="text-muted-foreground">
+              {isSab ? 'Avg Value' : 'Value'}
+            </span>
             <Badge className={`text-xs border ${getValueBadgeClass(pct)}`}>
               {sign}{pct.toFixed(1)}% — {label}
             </Badge>

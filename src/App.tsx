@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
+import { Toaster } from 'sonner'
 import ProtectedRoute from '@/components/protected-route'
 import AdminRoute from '@/components/admin-route'
 import Nav from '@/components/nav'
@@ -55,6 +56,7 @@ export default function App() {
       <Footer />
       </div>
       <Analytics />
+      <Toaster richColors position="bottom-right" />
     </BrowserRouter>
   )
 }

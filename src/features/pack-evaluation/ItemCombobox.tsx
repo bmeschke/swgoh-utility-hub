@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle } from 'react'
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Doc } from '../../../convex/_generated/dataModel'
@@ -20,14 +20,29 @@ export interface ItemComboboxHandle {
 
 interface ItemComboboxProps {
   onAdd: (item: Doc<'items'>) => void
+  placeholder?: string
+  /** Compact mode: smaller trigger button height, used inside SAB option rows */
+  compact?: boolean
 }
 
 const ItemCombobox = forwardRef<ItemComboboxHandle, ItemComboboxProps>(
-  function ItemCombobox({ onAdd }, ref) {
+  function ItemCombobox({ onAdd, placeholder = 'Add item...', compact = false }, ref) {
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState('')
     const [highlighted, setHighlighted] = useState('')
+    const inputRef = useRef<HTMLInputElement>(null)
     const items = useQuery(api.items.list) ?? []
+
+    // Focus the search input without causing page scroll whenever the popover opens
+    useEffect(() => {
+      if (open) {
+        // rAF lets Base UI finish positioning before we focus
+        const id = requestAnimationFrame(() => {
+          inputRef.current?.focus({ preventScroll: true })
+        })
+        return () => cancelAnimationFrame(id)
+      }
+    }, [open])
 
     useImperativeHandle(ref, () => ({
       openAndFocus: () => {
@@ -50,22 +65,28 @@ const ItemCombobox = forwardRef<ItemComboboxHandle, ItemComboboxProps>(
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           render={
-            <Button variant="outline" className="w-full justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              className={compact
+                ? 'w-full justify-between h-7 text-xs'
+                : 'w-full justify-between'}
+            >
               <span className="flex items-center gap-2">
-                <PlusIcon className="size-4" />
-                Add item...
+                <PlusIcon className={compact ? 'size-3' : 'size-4'} />
+                {placeholder}
               </span>
-              <ChevronsUpDownIcon className="size-4 opacity-50" />
+              <ChevronsUpDownIcon className={compact ? 'size-3 opacity-50' : 'size-4 opacity-50'} />
             </Button>
           }
         />
         <PopoverContent className="w-[400px] p-0" align="start">
           <Command value={highlighted} onValueChange={setHighlighted}>
             <CommandInput
+              ref={inputRef}
               placeholder="Search items..."
               value={search}
               onValueChange={setSearch}
-              autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Tab') {
                   e.preventDefault()

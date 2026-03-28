@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,8 +15,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { PriceCurrency } from '@/lib/valuations'
+import type { PriceCurrency, SabTierDraft, SabDiscount } from '@/lib/valuations'
 import type { EvalLineItem } from './EvaluatePackForm'
+import type { PackType } from './EvaluatePackForm'
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -27,18 +29,24 @@ type FormValues = z.infer<typeof schema>
 interface SaveToLibraryDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  packType: PackType
   items: EvalLineItem[]
   price: number
   priceCurrency: PriceCurrency
   crystalEquivalent: number
+  sabTiers?: SabTierDraft[]
+  sabDiscounts?: SabDiscount[]
 }
 
 export default function SaveToLibraryDialog({
   open,
   onOpenChange,
+  packType,
   items,
   price,
   priceCurrency,
+  sabTiers,
+  sabDiscounts,
 }: SaveToLibraryDialogProps) {
   const createPack = useMutation(api.packs.create)
 
@@ -50,19 +58,52 @@ export default function SaveToLibraryDialog({
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   async function onSubmit(values: FormValues) {
-    await createPack({
-      name: values.name,
-      price,
-      priceCurrency,
-      items: items.map((item) => ({
-        itemId: item.itemId as Id<'items'>,
-        quantity: item.quantity,
-        tiers: item.tiers,
-      })),
-      notes: values.notes || undefined,
-    })
+    try {
+    if (packType === 'sab' && sabTiers) {
+      await createPack({
+        name: values.name,
+        packType: 'sab',
+        price: 0, // computed server-side from sabTiers[0].price
+        items: [],
+        sabTiers: sabTiers.map((tier) => ({
+          price: parseFloat(tier.price) || 0,
+          items: tier.items.map((item) => ({
+            itemId: item.itemId as Id<'items'>,
+            quantity: item.quantity,
+          })),
+        })),
+        sabDiscounts: sabDiscounts
+          ?.filter((d) => parseFloat(d.discountAmount) > 0)
+          .map((d) => ({
+            quantity: d.quantity,
+            discountAmount: parseFloat(d.discountAmount),
+          })),
+        notes: values.notes || undefined,
+      })
+    } else {
+      await createPack({
+        name: values.name,
+        price,
+        priceCurrency,
+        items: items.map((item) => ({
+          itemId: item.itemId as Id<'items'>,
+          quantity: item.quantity,
+          tiers: item.tiers,
+        })),
+        notes: values.notes || undefined,
+      })
+    }
+    toast.success(`"${values.name}" saved to library.`)
     reset()
     onOpenChange(false)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('Not authenticated') || msg.includes('not authenticated')) {
+        toast.error('You must be signed in to save packs to the library.')
+      } else {
+        toast.error(`Failed to save: ${msg}`)
+      }
+    }
   }
 
   return (
@@ -76,7 +117,7 @@ export default function SaveToLibraryDialog({
             <Label htmlFor="pack-name">Pack name</Label>
             <Input
               id="pack-name"
-              placeholder="e.g. Rancor Challenge Pack"
+              placeholder="e.g. Relic Boost SAB"
               {...register('name')}
             />
             {errors.name && (

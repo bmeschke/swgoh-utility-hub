@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,10 +9,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { calcCrystalEquivalent, type PriceCurrency, type ProbabilityTier } from '@/lib/valuations'
+import {
+  DEFAULT_SAB_TIERS,
+  DEFAULT_SAB_DISCOUNTS,
+  type SabTierDraft,
+  type SabDiscount,
+} from '@/lib/valuations'
 import { cn } from '@/lib/utils'
 import ItemCombobox, { type ItemComboboxHandle } from '@/features/pack-evaluation/ItemCombobox'
 import PackLineItem from '@/features/pack-evaluation/PackLineItem'
+import SabPackBuilder from '@/features/pack-evaluation/SabPackBuilder'
 import type { Doc } from '../../../convex/_generated/dataModel'
+
+type PackType = 'standard' | 'sab'
 
 interface LineItem {
   itemId: string
@@ -49,8 +58,59 @@ interface EditPackFormProps {
   onSaved: () => void
 }
 
+/** Convert a stored SAB tier (with server-enriched options) back to draft state for editing */
+function sabTiersToDraft(sabTiers: Doc<'packs'>['sabTiers']): SabTierDraft[] {
+  if (!sabTiers || sabTiers.length === 0) return DEFAULT_SAB_TIERS
+  const drafts: SabTierDraft[] = sabTiers.map((tier) => ({
+    price: String(tier.price),
+    items: tier.items.map((li) => ({
+      itemId: li.itemId,
+      name: '…', // will be replaced by enriched data below
+      crystalValue: 0,
+      quantity: li.quantity,
+    })),
+  }))
+  // Pad to 3 tiers
+  while (drafts.length < 3) drafts.push({ price: '', items: [] })
+  return drafts
+}
+
+function sabDiscountsToDraft(sabDiscounts: Doc<'packs'>['sabDiscounts']): SabDiscount[] {
+  if (!sabDiscounts || sabDiscounts.length === 0) return DEFAULT_SAB_DISCOUNTS
+  return [1, 2, 3].map((q) => {
+    const found = sabDiscounts.find((d) => d.quantity === q)
+    return { quantity: q, discountAmount: found ? String(found.discountAmount) : '' }
+  })
+}
+
 export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormProps) {
   const updatePack = useMutation(api.packs.update)
+
+  const initialPackType: PackType = pack.packType === 'sab' ? 'sab' : 'standard'
+  const [packType, setPackType] = useState<PackType>(initialPackType)
+
+  // Initialise SAB draft state — use sabTiersWithDetails for item names if available
+  const enrichedTiers = (pack as { sabTiersWithDetails?: typeof pack.sabTiers }).sabTiersWithDetails
+  const initialSabTiers: SabTierDraft[] = (() => {
+    const src = enrichedTiers ?? pack.sabTiers
+    if (!src || src.length === 0) return DEFAULT_SAB_TIERS
+    const drafts: SabTierDraft[] = src.map((tier) => ({
+      price: String(tier.price),
+      items: tier.items.map((li) => ({
+        itemId: li.itemId,
+        name: (li as { name?: string }).name ?? '…',
+        crystalValue: (li as { crystalValue?: number }).crystalValue ?? 0,
+        quantity: li.quantity,
+      })),
+    }))
+    while (drafts.length < 3) drafts.push({ price: '', items: [] })
+    return drafts
+  })()
+
+  const [sabTiers, setSabTiers] = useState<SabTierDraft[]>(initialSabTiers)
+  const [sabDiscounts, setSabDiscounts] = useState<SabDiscount[]>(
+    sabDiscountsToDraft(pack.sabDiscounts)
+  )
 
   const { control, register, watch, setValue, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<FormValues>({
@@ -97,18 +157,38 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
   }
 
   async function onSubmit(values: FormValues) {
-    await updatePack({
-      id: pack._id,
-      name: values.name,
-      price,
-      priceCurrency,
-      items: watchedItems.map((item) => ({
-        itemId: item.itemId as Id<'items'>,
-        quantity: item.quantity,
-        tiers: item.tiers,
-      })),
-      notes: values.notes || undefined,
-    })
+    if (packType === 'sab') {
+      await updatePack({
+        id: pack._id,
+        name: values.name,
+        packType: 'sab',
+        sabTiers: sabTiers.map((tier) => ({
+          price: parseFloat(tier.price) || 0,
+          items: tier.items.map((item) => ({
+            itemId: item.itemId as Id<'items'>,
+            quantity: item.quantity,
+          })),
+        })),
+        sabDiscounts: sabDiscounts
+          .filter((d) => parseFloat(d.discountAmount) > 0)
+          .map((d) => ({ quantity: d.quantity, discountAmount: parseFloat(d.discountAmount) })),
+        notes: values.notes || undefined,
+      })
+    } else {
+      await updatePack({
+        id: pack._id,
+        name: values.name,
+        price,
+        priceCurrency,
+        packType: 'standard',
+        items: watchedItems.map((item) => ({
+          itemId: item.itemId as Id<'items'>,
+          quantity: item.quantity,
+          tiers: item.tiers,
+        })),
+        notes: values.notes || undefined,
+      })
+    }
     onSaved()
   }
 
@@ -120,82 +200,119 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
         {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
       </div>
 
-      <div className="space-y-2">
-        <Label>Items</Label>
-        <ItemCombobox ref={comboboxRef} onAdd={handleAddItem} />
-        {fields.length > 0 && (
-          <div className="space-y-2 mt-2">
-            {fields.map((field, index) => (
-              <PackLineItem
-                key={field.id}
-                name={field.name}
-                crystalValue={field.crystalValue}
-                quantity={watchedItems[index]?.quantity ?? field.quantity}
-                tiers={watchedItems[index]?.tiers}
-                onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
-                onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
-                onRemove={() => remove(index)}
-                inputRef={(el) => { qtyRefs.current[index] = el }}
-                onEnter={() => comboboxRef.current?.openAndFocus()}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
+      {/* Pack type toggle */}
       <div className="space-y-1.5">
-        <Label>Pack price</Label>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border text-sm overflow-hidden shrink-0">
-            <button
-              type="button"
-              onClick={() => setValue('priceCurrency', 'usd')}
-              className={cn(
-                'px-3 py-1 transition-colors',
-                priceCurrency === 'usd' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-              )}
-            >
-              $ USD
-            </button>
-            <button
-              type="button"
-              onClick={() => setValue('priceCurrency', 'crystals')}
-              className={cn(
-                'px-3 py-1 border-l transition-colors',
-                priceCurrency === 'crystals' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-              )}
-            >
-              ✦ Crystals
-            </button>
-          </div>
-          <Input
-            type="number"
-            min={0}
-            step={priceCurrency === 'usd' ? 0.01 : 1}
-            placeholder={priceCurrency === 'usd' ? 'e.g. 9.99' : 'e.g. 800'}
-            {...register('price')}
-            className="max-w-[160px]"
-          />
+        <Label>Pack type</Label>
+        <div className="flex rounded-lg border text-sm overflow-hidden w-fit">
+          <button
+            type="button"
+            onClick={() => setPackType('standard')}
+            className={cn(
+              'px-4 py-1.5 transition-colors',
+              packType === 'standard' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+            )}
+          >
+            Standard
+          </button>
+          <button
+            type="button"
+            onClick={() => setPackType('sab')}
+            className={cn(
+              'px-4 py-1.5 border-l transition-colors',
+              packType === 'sab' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+            )}
+          >
+            Slice-A-Bundle
+          </button>
         </div>
       </div>
+
+      {packType === 'standard' ? (
+        <>
+          <div className="space-y-2">
+            <Label>Items</Label>
+            <ItemCombobox ref={comboboxRef} onAdd={handleAddItem} />
+            {fields.length > 0 && (
+              <div className="space-y-2 mt-2">
+                {fields.map((field, index) => (
+                  <PackLineItem
+                    key={field.id}
+                    name={field.name}
+                    crystalValue={field.crystalValue}
+                    quantity={watchedItems[index]?.quantity ?? field.quantity}
+                    tiers={watchedItems[index]?.tiers}
+                    onQuantityChange={(qty) => setValue(`items.${index}.quantity`, qty)}
+                    onTiersChange={(tiers) => setValue(`items.${index}.tiers`, tiers)}
+                    onRemove={() => remove(index)}
+                    inputRef={(el) => { qtyRefs.current[index] = el }}
+                    onEnter={() => comboboxRef.current?.openAndFocus()}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Pack price</Label>
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-lg border text-sm overflow-hidden shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setValue('priceCurrency', 'usd')}
+                  className={cn(
+                    'px-3 py-1 transition-colors',
+                    priceCurrency === 'usd' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  )}
+                >
+                  $ USD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue('priceCurrency', 'crystals')}
+                  className={cn(
+                    'px-3 py-1 border-l transition-colors',
+                    priceCurrency === 'crystals' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  )}
+                >
+                  ✦ Crystals
+                </button>
+              </div>
+              <Input
+                type="number"
+                min={0}
+                step={priceCurrency === 'usd' ? 0.01 : 1}
+                placeholder={priceCurrency === 'usd' ? 'e.g. 9.99' : 'e.g. 800'}
+                {...register('price')}
+                className="max-w-[160px]"
+              />
+            </div>
+          </div>
+
+          {crystalEquivalent > 0 && (
+            <p className="text-sm text-muted-foreground">
+              Crystal equivalent: <span className="font-medium text-foreground">{crystalEquivalent.toLocaleString()}✦</span>
+              {price > 0 && (
+                <span className="ml-3">
+                  Price: <span className="font-medium text-foreground">
+                    {priceCurrency === 'usd' ? `$${price.toFixed(2)}` : `${price.toLocaleString()}✦`}
+                  </span>
+                </span>
+              )}
+            </p>
+          )}
+        </>
+      ) : (
+        <SabPackBuilder
+          tiers={sabTiers}
+          discounts={sabDiscounts}
+          onChange={(t, d) => { setSabTiers(t); setSabDiscounts(d) }}
+        />
+      )}
 
       <div className="space-y-1.5">
         <Label htmlFor="edit-notes">Notes (optional)</Label>
         <Input id="edit-notes" placeholder="Any additional context..." {...register('notes')} />
       </div>
-
-      {crystalEquivalent > 0 && (
-        <p className="text-sm text-muted-foreground">
-          Crystal equivalent: <span className="font-medium text-foreground">{crystalEquivalent.toLocaleString()}✦</span>
-          {price > 0 && (
-            <span className="ml-3">
-              Price: <span className="font-medium text-foreground">
-                {priceCurrency === 'usd' ? `$${price.toFixed(2)}` : `${price.toLocaleString()}✦`}
-              </span>
-            </span>
-          )}
-        </p>
-      )}
 
       <div className="flex gap-2">
         <Button type="submit" disabled={isSubmitting}>

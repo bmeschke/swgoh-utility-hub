@@ -16,6 +16,7 @@ import {
 } from '@/lib/valuations'
 import { ArrowLeftIcon, Dices } from 'lucide-react'
 import EditPackForm from './EditPackForm'
+import SabPackDetail from './SabPackDetail'
 
 // Maps a raw item category to a normalised display label.
 // All "Shard - *" variants collapse to "Shards".
@@ -98,6 +99,7 @@ export default function PackDetail({ packId }: PackDetailProps) {
     )
   }
 
+  const isSab = pack.packType === 'sab'
   const isCrystalPack = pack.priceCurrency === 'crystals'
   const priceDisplay = isCrystalPack
     ? `${pack.price.toLocaleString()}✦`
@@ -133,7 +135,11 @@ export default function PackDetail({ packId }: PackDetailProps) {
         )}
       </div>
 
-      <Card>
+      {isSab ? (
+        <SabPackDetail pack={pack as Parameters<typeof SabPackDetail>[0]['pack']} />
+      ) : null}
+
+      {!isSab && (<><Card>
         <CardHeader>
           <CardTitle className="text-base">Contents</CardTitle>
         </CardHeader>
@@ -233,7 +239,7 @@ export default function PackDetail({ packId }: PackDetailProps) {
             </>
           )}
         </CardContent>
-      </Card>
+      </Card></>)}
 
       {isAdmin && (
         <div className="flex gap-2">

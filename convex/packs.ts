@@ -1,5 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import type { MutationCtx } from './_generated/server'
+import type { Id } from './_generated/dataModel'
 import { requireAdmin } from './lib/adminCheck'
 import { rateLimit } from './lib/rateLimits'
 
@@ -9,6 +11,16 @@ const itemLineValidator = v.object({
   itemId: v.id('items'),
   quantity: v.number(),
   tiers: v.optional(v.array(tierValidator)),
+})
+
+const sabTierInputValidator = v.object({
+  price: v.number(),
+  items: v.array(v.object({ itemId: v.id('items'), quantity: v.number() })),
+})
+
+const sabDiscountValidator = v.object({
+  quantity: v.number(),
+  discountAmount: v.number(),
 })
 
 /** Public: list all published packs */
@@ -38,6 +50,7 @@ export const get = query({
     const pack = await ctx.db.get(args.id)
     if (!pack) return null
 
+    // Standard pack: join item details
     const itemsWithDetails = await Promise.all(
       pack.items.map(async (line) => {
         const item = await ctx.db.get(line.itemId)
@@ -52,9 +65,66 @@ export const get = query({
       })
     )
 
-    return { ...pack, itemsWithDetails }
+    // SAB pack: join item details for each tier
+    let sabTiersWithDetails: typeof pack.sabTiers | undefined = undefined
+    if (pack.sabTiers) {
+      sabTiersWithDetails = await Promise.all(
+        pack.sabTiers.map(async (tier) => ({
+          ...tier,
+          items: await Promise.all(
+            tier.items.map(async (line) => {
+              const item = await ctx.db.get(line.itemId)
+              return {
+                itemId: line.itemId,
+                quantity: line.quantity,
+                name: item?.name ?? 'Unknown',
+                category: item?.category,
+                crystalValue: item?.crystalValue ?? 0,
+              }
+            })
+          ),
+        }))
+      )
+    }
+
+    return { ...pack, itemsWithDetails, sabTiersWithDetails }
   },
 })
+
+// ─── SAB helpers ──────────────────────────────────────────────────────────────
+
+type SabTierInput = {
+  price: number
+  items: Array<{ itemId: string; quantity: number }>
+}
+
+async function computeSabFields(ctx: MutationCtx, sabTiers: SabTierInput[]) {
+  let totalCE = 0
+
+  const enrichedTiers = await Promise.all(
+    sabTiers.map(async (tier) => {
+      let tierTotal = 0
+      for (const line of tier.items) {
+        const item = await ctx.db.get(line.itemId as never)
+        if (!item) throw new ConvexError(`Item not found: ${line.itemId}`)
+        tierTotal += (item as { crystalValue: number }).crystalValue * line.quantity
+      }
+      // Average CE across choices (user picks one item per tier)
+      const tierCE = tier.items.length > 0 ? tierTotal / tier.items.length : 0
+      totalCE += tierCE
+      return {
+        price: tier.price,
+        crystalEquivalent: tierCE,
+        items: tier.items.map((line) => ({
+          itemId: line.itemId as Id<'items'>,
+          quantity: line.quantity,
+        })),
+      }
+    })
+  )
+
+  return { enrichedTiers, avgCE: totalCE }
+}
 
 /** Admin: create a pack, computing crystalEquivalent server-side */
 export const create = mutation({
@@ -64,11 +134,31 @@ export const create = mutation({
     priceCurrency: v.optional(v.union(v.literal('usd'), v.literal('crystals'))),
     items: v.array(itemLineValidator),
     notes: v.optional(v.string()),
+    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'))),
+    sabTiers: v.optional(v.array(sabTierInputValidator)),
+    sabDiscounts: v.optional(v.array(sabDiscountValidator)),
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
     await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
 
+    if (args.packType === 'sab' && args.sabTiers) {
+      const { enrichedTiers, avgCE } = await computeSabFields(ctx, args.sabTiers)
+      return await ctx.db.insert('packs', {
+        name: args.name,
+        packType: 'sab',
+        price: enrichedTiers[0]?.price ?? 0, // tier 1 price for "From $X" display
+        priceCurrency: 'usd',
+        items: [],
+        crystalEquivalent: Math.round(avgCE),
+        published: true,
+        notes: args.notes,
+        sabTiers: enrichedTiers,
+        sabDiscounts: args.sabDiscounts,
+      })
+    }
+
+    // Standard pack
     let crystalEquivalent = 0
     for (const line of args.items) {
       const item = await ctx.db.get(line.itemId)
@@ -78,6 +168,7 @@ export const create = mutation({
 
     return await ctx.db.insert('packs', {
       name: args.name,
+      packType: 'standard',
       price: args.price,
       priceCurrency: args.priceCurrency ?? 'usd',
       items: args.items,
@@ -97,14 +188,23 @@ export const update = mutation({
     priceCurrency: v.optional(v.union(v.literal('usd'), v.literal('crystals'))),
     items: v.optional(v.array(itemLineValidator)),
     notes: v.optional(v.string()),
+    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'))),
+    sabTiers: v.optional(v.array(sabTierInputValidator)),
+    sabDiscounts: v.optional(v.array(sabDiscountValidator)),
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
     await rateLimit(ctx, { name: 'adminMutation', key: identity.subject, throws: true })
-    const { id, items, ...rest } = args
+    const { id, items, sabTiers, ...rest } = args
     const updates: Record<string, unknown> = { ...rest }
 
-    if (items !== undefined) {
+    if (args.packType === 'sab' && sabTiers !== undefined) {
+      const { enrichedTiers, avgCE } = await computeSabFields(ctx, sabTiers)
+      updates.sabTiers = enrichedTiers
+      updates.crystalEquivalent = Math.round(avgCE)
+      updates.price = enrichedTiers[0]?.price ?? 0
+      updates.items = []
+    } else if (items !== undefined) {
       let crystalEquivalent = 0
       for (const line of items) {
         const item = await ctx.db.get(line.itemId)
