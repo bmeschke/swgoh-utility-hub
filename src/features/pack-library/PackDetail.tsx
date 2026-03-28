@@ -212,7 +212,7 @@ export default function PackDetail({ packId }: PackDetailProps) {
                 <span className="font-medium">{priceDisplay}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Content crystal equivalent</span>
+                <span className="text-muted-foreground">Content crystal value</span>
                 <span className="font-medium">{pack.crystalEquivalent.toLocaleString()}✦</span>
               </div>
               <Separator />

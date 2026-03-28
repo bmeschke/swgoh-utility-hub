@@ -129,9 +129,7 @@ export default function PackValueResult({
                             {t.incrementalPrice > 0 ? ` — $${t.incrementalPrice.toFixed(2)}` : ''}
                           </p>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              Content avg crystal equivalent
-                            </span>
+                            <span className="text-muted-foreground">Content avg crystal value</span>
                             <span className="font-medium">
                               {Math.round(t.tierCE).toLocaleString()}✦
                             </span>
@@ -163,7 +161,7 @@ export default function PackValueResult({
 
               {/* Totals (also serves as the flat view for single-tier) */}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Content crystal equivalent</span>
+                <span className="text-muted-foreground">Content crystal value</span>
                 <span className="font-medium">{Math.round(sabTotalCE).toLocaleString()}✦</span>
               </div>
               {sabTotalPrice > 0 && (
@@ -196,7 +194,7 @@ export default function PackValueResult({
           {packType !== 'sab' && (
             <>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Content crystal equivalent</span>
+                <span className="text-muted-foreground">Content crystal value</span>
                 <span className="font-medium">
                   {Math.round(crystalEquivalent).toLocaleString()}✦
                 </span>

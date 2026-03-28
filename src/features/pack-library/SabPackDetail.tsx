@@ -288,7 +288,7 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
               <span className="font-medium">${totalPaid.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Content crystal equivalent</span>
+              <span className="text-muted-foreground">Content crystal value</span>
               <span className="font-medium">{totalCE.toLocaleString()}✦</span>
             </div>
             <Separator />
@@ -335,9 +335,7 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
                         {incPrice > 0 ? ` — $${incPrice.toFixed(2)}` : ''}
                       </p>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Content avg crystal equivalent
-                        </span>
+                        <span className="text-muted-foreground">Content avg crystal value</span>
                         <span className="font-medium">{Math.round(avgCE).toLocaleString()}✦</span>
                       </div>
                       {incPrice > 0 && (
@@ -367,7 +365,7 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
 
             {/* Totals */}
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Content avg crystal equivalent</span>
+              <span className="text-muted-foreground">Content avg crystal value</span>
               <span className="font-medium">{Math.round(totalAvgCE).toLocaleString()}✦</span>
             </div>
             {avgTotalPrice > 0 && (
