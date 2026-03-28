@@ -10,25 +10,45 @@ This project scaffold is complete. The `docs/` directory contains the full Produ
 
 ---
 
+## Reminders
+
+> **Dependabot is disabled.** `.github/dependabot.yml` was removed because the weekly PRs create noisy Vercel preview builds during active development. Re-enable it when the project reaches a maintenance phase by restoring the file:
+>
+> ```yaml
+> version: 2
+> updates:
+>   - package-ecosystem: 'npm'
+>     directory: '/'
+>     schedule:
+>       interval: 'weekly'
+>     assignees:
+>       - 'bmeschke'
+>     labels:
+>       - 'dependencies'
+>     open-pull-requests-limit: 10
+> ```
+
+---
+
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend framework | React + TypeScript |
-| Build tool | Vite |
-| Styling | Tailwind CSS v4 |
-| UI components | shadcn/ui + lucide-react |
-| Routing | React Router |
-| Backend / database | Convex.dev |
-| Auth | Clerk (Google, Discord, Apple) |
-| Forms | React Hook Form + Zod |
-| Tables | TanStack Table |
-| Charts | Recharts |
+| Layer                | Technology                                                   |
+| -------------------- | ------------------------------------------------------------ |
+| Frontend framework   | React + TypeScript                                           |
+| Build tool           | Vite                                                         |
+| Styling              | Tailwind CSS v4                                              |
+| UI components        | shadcn/ui + lucide-react                                     |
+| Routing              | React Router                                                 |
+| Backend / database   | Convex.dev                                                   |
+| Auth                 | Clerk (Google, Discord, Apple)                               |
+| Forms                | React Hook Form + Zod                                        |
+| Tables               | TanStack Table                                               |
+| Charts               | Recharts                                                     |
 | Unit/component tests | Vitest + React Testing Library + @testing-library/user-event |
-| E2E tests | Playwright |
-| Component workshop | Storybook |
-| Error monitoring | Sentry |
-| Hosting | Vercel (GitHub-connected) |
+| E2E tests            | Playwright                                                   |
+| Component workshop   | Storybook                                                    |
+| Error monitoring     | Sentry                                                       |
+| Hosting              | Vercel (GitHub-connected)                                    |
 
 ---
 
@@ -65,10 +85,12 @@ npm run format:check  # Prettier check
 ### Two-layer product structure
 
 **Public layer** (no auth required):
+
 - Pack Value Library — searchable, admin-curated valuations of SWGOH store packs
 - Pack Evaluation — temporary calculator for evaluating any pack on the fly; results are never saved to the library
 
 **Authenticated planning layer** (Clerk-protected routes):
+
 - Income Modeling — foundational input; models crystal/material/currency income from all SWGOH reward sources
 - Resource Budgeting / Earmarking — reserves income toward goals, shows surplus/deficit
 - Goal Planning — selects a target unlock, shows requirements, costs, and timeline
@@ -171,9 +193,11 @@ Run `npx convex dev` to link to a Convex project and get the deployment URL.
 - `docs/Tech-Stack_SWGOH-Utility-Hub.md` — rationale and responsibility for every library and tool
 
 <!-- convex-ai-start -->
+
 This project uses [Convex](https://convex.dev) as its backend.
 
 When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
 
 Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+
 <!-- convex-ai-end -->
