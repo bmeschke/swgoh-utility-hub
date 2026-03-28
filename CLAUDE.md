@@ -12,6 +12,14 @@ This project scaffold is complete. The `docs/` directory contains the full Produ
 
 ## Reminders
 
+> **Deploying to production — Convex requires a separate step.** Pushing to GitHub triggers Vercel automatically, but Convex has its own production deployment. Any time changes to `convex/` (schema, functions, etc.) are pushed to production, also run:
+>
+> ```bash
+> npx convex deploy
+> ```
+>
+> Without this, the Vercel frontend will be on new code but the backend will be out of date, causing server errors. Always remind Brian to run this if the push includes any Convex changes.
+
 > **Dependabot is disabled.** `.github/dependabot.yml` was removed because the weekly PRs create noisy Vercel preview builds during active development. Re-enable it when the project reaches a maintenance phase by restoring the file:
 >
 > ```yaml
