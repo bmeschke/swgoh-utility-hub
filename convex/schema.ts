@@ -1,5 +1,4 @@
 import { defineSchema, defineTable } from 'convex/server'
-import { rateLimitTables } from 'convex-helpers/server/rateLimit'
 import { v } from 'convex/values'
 
 // ─── Income profile validators ───────────────────────────────────────────────
@@ -42,7 +41,13 @@ const assaultBattlesValidator = v.object({
 const placeholderSectionValidator = v.record(v.string(), v.union(v.string(), v.number()))
 
 export default defineSchema({
-  ...rateLimitTables,
+  // Rate limiter state table (inlined from convex-helpers/server/rateLimit)
+  rateLimits: defineTable({
+    name: v.string(),
+    key: v.optional(v.string()),
+    value: v.number(),
+    ts: v.number(),
+  }).index('name_key', ['name', 'key']),
 
   incomeProfiles: defineTable({
     userId: v.string(),
