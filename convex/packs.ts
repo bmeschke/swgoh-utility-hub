@@ -104,13 +104,21 @@ async function computeSabFields(ctx: MutationCtx, sabTiers: SabTierInput[]) {
   const enrichedTiers = await Promise.all(
     sabTiers.map(async (tier) => {
       let tierTotal = 0
+      let valuedCount = 0
       for (const line of tier.items) {
         const item = await ctx.db.get(line.itemId as never)
         if (!item) throw new ConvexError(`Item not found: ${line.itemId}`)
-        tierTotal += (item as { crystalValue: number }).crystalValue * line.quantity
+        const itemCE = (item as { crystalValue: number }).crystalValue * line.quantity
+        // Exclude zero-value items (e.g. Chromium Transistors) from the average —
+        // they are shown as options so users know to avoid them, but they shouldn't
+        // drag down the tier's expected value.
+        if (itemCE > 0) {
+          tierTotal += itemCE
+          valuedCount++
+        }
       }
-      // Average CE across choices (user picks one item per tier)
-      const tierCE = tier.items.length > 0 ? tierTotal / tier.items.length : 0
+      // Average CE across non-zero choices (user picks one item per tier)
+      const tierCE = valuedCount > 0 ? tierTotal / valuedCount : 0
       totalCE += tierCE
       return {
         price: tier.price,

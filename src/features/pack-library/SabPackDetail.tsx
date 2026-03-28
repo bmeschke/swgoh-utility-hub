@@ -133,6 +133,15 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
 
   const hasAnySelection = selectedItemIds.some((id) => id !== null)
 
+  // ── Average value (always computed, shown regardless of selection) ──────────
+  const totalAvgCE = tiers.reduce((s, t) => s + t.crystalEquivalent, 0)
+  const avgTotalPrice =
+    tiers.length > 0 ? cumulativeEffectivePrice(tiers, discounts, tiers.length - 1) : 0
+  const avgTotalStdVal = calcDollarValue(totalAvgCE, 'regular')
+  const avgTotalHolVal = calcDollarValue(totalAvgCE, 'holiday')
+  const avgTotalStdPct = calcGainLossPercent(avgTotalStdVal, avgTotalPrice)
+  const avgTotalHolPct = calcGainLossPercent(avgTotalHolVal, avgTotalPrice)
+
   if (tiers.length === 0) {
     return <p className="text-sm text-muted-foreground">No tier data available.</p>
   }
@@ -297,6 +306,91 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
                 <GainBadge pct={regularPct} displayPct={holidayPct} />
               </span>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Average Value ── */}
+      {totalAvgCE > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Average Value</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {/* Per-tier breakdown — only when 2+ tiers */}
+            {tiers.length > 1 && (
+              <>
+                {tiers.map((tier, tierIdx) => {
+                  const avgCE = tier.crystalEquivalent
+                  if (avgCE <= 0) return null
+                  const incPrice = incrementalEffectivePrice(tiers, discounts, tierIdx)
+                  const avgStdVal = calcDollarValue(avgCE, 'regular')
+                  const avgHolVal = calcDollarValue(avgCE, 'holiday')
+                  const avgStdPct = calcGainLossPercent(avgStdVal, incPrice)
+                  const avgHolPct = calcGainLossPercent(avgHolVal, incPrice)
+                  return (
+                    <div key={tierIdx} className="space-y-3">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {TIER_LABELS[tierIdx]}
+                        {incPrice > 0 ? ` — $${incPrice.toFixed(2)}` : ''}
+                      </p>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Avg crystal equivalent</span>
+                        <span className="font-medium">{Math.round(avgCE).toLocaleString()}✦</span>
+                      </div>
+                      {incPrice > 0 && (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Regular pricing</span>
+                            <span className="flex items-center gap-2">
+                              ${avgStdVal.toFixed(2)}
+                              <GainBadge pct={avgStdPct} />
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Holiday pricing</span>
+                            <span className="flex items-center gap-2">
+                              ${avgHolVal.toFixed(2)}
+                              <GainBadge pct={avgStdPct} displayPct={avgHolPct} />
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+                <Separator />
+              </>
+            )}
+
+            {/* Totals */}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Crystal equivalent</span>
+              <span className="font-medium">{Math.round(totalAvgCE).toLocaleString()}✦</span>
+            </div>
+            {avgTotalPrice > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Bundle price</span>
+                  <span className="font-medium">${avgTotalPrice.toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Regular pricing</span>
+                  <span className="flex items-center gap-2">
+                    ${avgTotalStdVal.toFixed(2)}
+                    <GainBadge pct={avgTotalStdPct} />
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Holiday pricing</span>
+                  <span className="flex items-center gap-2">
+                    ${avgTotalHolVal.toFixed(2)}
+                    <GainBadge pct={avgTotalStdPct} displayPct={avgTotalHolPct} />
+                  </span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
