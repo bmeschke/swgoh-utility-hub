@@ -24,17 +24,12 @@ const shortABTier = v.union(
   v.literal('VI')
 )
 
-const assaultBattlesValidator = v.object({
-  'Fanatical Devotion': v.optional(standardABTier),
-  'Forest Moon': v.optional(standardABTier),
-  'Ground War': v.optional(standardABTier),
-  'Military Might': v.optional(standardABTier),
-  'Places of Power': v.optional(standardABTier),
-  'Rebel Roundup': v.optional(standardABTier),
-  'Secrets and Shadows': v.optional(standardABTier),
-  'Peridea Patrol': v.optional(shortABTier),
-  'Duel of the Fates': v.optional(shortABTier),
-})
+// v.record() is used instead of v.object() because battle names contain
+// spaces, which Convex rejects as object field identifiers.
+const assaultBattlesValidator = v.record(
+  v.string(),
+  v.union(standardABTier, shortABTier)
+)
 
 // Placeholder sections: constrained to string keys -> string | number values.
 // Replace with strict validators when each section is implemented.
