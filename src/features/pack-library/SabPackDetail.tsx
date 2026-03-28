@@ -47,7 +47,7 @@ interface SabPackDetailProps {
 function cumulativeEffectivePrice(
   tiers: SabTierDetail[],
   discounts: SabDiscount[] | undefined,
-  upToIndex: number,
+  upToIndex: number
 ): number {
   const raw = tiers.slice(0, upToIndex + 1).reduce((s, t) => s + t.price, 0)
   const discount = discounts?.[upToIndex]?.discountAmount ?? 0
@@ -58,7 +58,7 @@ function cumulativeEffectivePrice(
 function incrementalEffectivePrice(
   tiers: SabTierDetail[],
   discounts: SabDiscount[] | undefined,
-  tierIdx: number,
+  tierIdx: number
 ): number {
   const cumulative = cumulativeEffectivePrice(tiers, discounts, tierIdx)
   const prev = tierIdx > 0 ? cumulativeEffectivePrice(tiers, discounts, tierIdx - 1) : 0
@@ -71,7 +71,8 @@ function GainBadge({ pct, displayPct }: { pct: number; displayPct?: number }) {
   const sign = shown >= 0 ? '+' : ''
   return (
     <Badge className={`text-xs border ${getValueBadgeClass(pct)}`}>
-      {sign}{shown.toFixed(1)}% — {label}
+      {sign}
+      {shown.toFixed(1)}% — {label}
     </Badge>
   )
 }
@@ -85,8 +86,8 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
   const discounts = pack.sabDiscounts
 
   // One selected itemId per tier (null = nothing selected)
-  const [selectedItemIds, setSelectedItemIds] = useState<(string | null)[]>(
-    () => tiers.map(() => null)
+  const [selectedItemIds, setSelectedItemIds] = useState<(string | null)[]>(() =>
+    tiers.map(() => null)
   )
 
   // A tier is unlocked only if all previous tiers have a selection
@@ -98,12 +99,11 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
   function selectItem(tierIdx: number, itemId: string) {
     const next = [...selectedItemIds]
     if (next[tierIdx] === itemId) {
-      // Deselect this and all subsequent tiers
+      // Deselecting — clear this tier and all subsequent tiers
       for (let i = tierIdx; i < next.length; i++) next[i] = null
     } else {
+      // Changing selection — only update this tier, leave others intact
       next[tierIdx] = itemId
-      // Deselect any subsequent tiers (in case they become orphaned)
-      for (let i = tierIdx + 1; i < next.length; i++) next[i] = null
     }
     setSelectedItemIds(next)
   }
@@ -122,11 +122,9 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
 
   const totalCE = selectedItems.reduce(
     (s, item) => s + (item ? item.crystalValue * item.quantity : 0),
-    0,
+    0
   )
-  const totalPaid = tiersCount > 0
-    ? cumulativeEffectivePrice(tiers, discounts, tiersCount - 1)
-    : 0
+  const totalPaid = tiersCount > 0 ? cumulativeEffectivePrice(tiers, discounts, tiersCount - 1) : 0
 
   const standardValue = calcDollarValue(totalCE, 'regular')
   const holidayValue = calcDollarValue(totalCE, 'holiday')
@@ -141,7 +139,6 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
 
   return (
     <div className="space-y-4">
-
       {/* ── Tier panels ── */}
       {tiers.map((tier, tierIdx) => {
         const locked = isTierLocked(tierIdx)
@@ -154,9 +151,7 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
             className={cn(
               'rounded-lg border transition-all',
               locked ? 'opacity-50' : '',
-              tierHasSelection
-                ? 'border-primary/60 bg-primary/5'
-                : 'bg-muted/10'
+              tierHasSelection ? 'border-primary/60 bg-primary/5' : 'bg-muted/10'
             )}
           >
             {/* Tier header */}
@@ -167,12 +162,13 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
                 <span className="text-sm text-muted-foreground">+${incPrice.toFixed(2)}</span>
               )}
               <span className="ml-auto text-xs">
-                {tierHasSelection
-                  ? <span className="text-primary font-medium">Selected ✓</span>
-                  : locked
-                    ? <span className="text-muted-foreground">Select Tier {tierIdx} first</span>
-                    : <span className="text-muted-foreground">Choose one below</span>
-                }
+                {tierHasSelection ? (
+                  <span className="text-primary font-medium">Selected ✓</span>
+                ) : locked ? (
+                  <span className="text-muted-foreground">Select Tier {tierIdx} first</span>
+                ) : (
+                  <span className="text-muted-foreground">Choose one below</span>
+                )}
               </span>
             </div>
 
@@ -197,33 +193,34 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
                       onClick={() => selectItem(tierIdx, item.itemId)}
                       className={cn(
                         'w-full text-left px-4 py-2.5 transition-colors',
-                        locked
-                          ? 'cursor-not-allowed'
-                          : 'cursor-pointer hover:bg-muted/30',
+                        locked ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted/30',
                         isSelected ? 'bg-primary/10' : ''
                       )}
                     >
                       {/* Row 1: name + standard value */}
                       <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-sm font-medium">
-                          {isSelected && (
-                            <CheckIcon className="size-3.5 text-primary shrink-0" />
-                          )}
+                          {isSelected && <CheckIcon className="size-3.5 text-primary shrink-0" />}
                           {item.name}
                         </span>
                         <span className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-xs text-muted-foreground">Standard: ${itemStdVal.toFixed(2)}</span>
+                          <span className="text-xs text-muted-foreground">
+                            Standard: ${itemStdVal.toFixed(2)}
+                          </span>
                           {incPrice > 0 && <GainBadge pct={itemStdPct} />}
                         </span>
                       </div>
                       {/* Row 2: CV formula + holiday value */}
                       <div className="flex items-center justify-between gap-2 mt-0.5">
                         <span className="text-xs text-muted-foreground">
-                          {item.crystalValue.toLocaleString()}✦ × {item.quantity.toLocaleString()} = {itemCE.toLocaleString()}✦
+                          {item.crystalValue.toLocaleString()}✦ × {item.quantity.toLocaleString()} ={' '}
+                          {itemCE.toLocaleString()}✦
                         </span>
                         {incPrice > 0 && (
                           <span className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-xs text-muted-foreground">Holiday: ${itemHolVal.toFixed(2)}</span>
+                            <span className="text-xs text-muted-foreground">
+                              Holiday: ${itemHolVal.toFixed(2)}
+                            </span>
                             <GainBadge pct={itemStdPct} displayPct={itemHolPct} />
                           </span>
                         )}
@@ -258,7 +255,9 @@ export default function SabPackDetail({ pack }: SabPackDetailProps) {
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground pl-2">
                       <span>{item.name}</span>
-                      <span>{item.crystalValue.toLocaleString()}✦ × {item.quantity.toLocaleString()}</span>
+                      <span>
+                        {item.crystalValue.toLocaleString()}✦ × {item.quantity.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 ) : null
