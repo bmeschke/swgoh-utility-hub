@@ -69,7 +69,8 @@ function GainBadge({ pct, label: labelOverride }: { pct: number; label?: string 
 export default function PackDetail({ packId }: PackDetailProps) {
   const navigate = useNavigate()
   const { user } = useUser()
-  const isAdmin = !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
+  const isAdmin =
+    !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
   const [isEditing, setIsEditing] = useState(false)
 
   const pack = useQuery(api.packs.get, { id: packId })
@@ -130,127 +131,129 @@ export default function PackDetail({ packId }: PackDetailProps) {
 
       <div>
         <h1 className="text-2xl font-bold">{pack.name}</h1>
-        {pack.notes && (
-          <p className="mt-1 text-sm text-muted-foreground">{pack.notes}</p>
-        )}
+        {pack.notes && <p className="mt-1 text-sm text-muted-foreground">{pack.notes}</p>}
       </div>
 
-      {isSab ? (
-        <SabPackDetail pack={pack as Parameters<typeof SabPackDetail>[0]['pack']} />
-      ) : null}
+      {isSab ? <SabPackDetail pack={pack as Parameters<typeof SabPackDetail>[0]['pack']} /> : null}
 
-      {!isSab && (<><Card>
-        <CardHeader>
-          <CardTitle className="text-base">Contents</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          {(() => {
-            // Group by normalised display category
-            const groups = new Map<string, typeof pack.itemsWithDetails>()
-            for (const item of pack.itemsWithDetails) {
-              const key = normaliseCategory(item.category)
-              if (!groups.has(key)) groups.set(key, [])
-              groups.get(key)!.push(item)
-            }
-            // Sort groups by canonical order; unknowns go to the end
-            // Sort items within each group by descending total crystal value
-            for (const items of groups.values()) {
-              items.sort((a, b) => (b.crystalValue * b.quantity) - (a.crystalValue * a.quantity))
-            }
-            const sorted = Array.from(groups.entries()).sort(([a], [b]) => {
-              const ai = CATEGORY_ORDER.indexOf(a)
-              const bi = CATEGORY_ORDER.indexOf(b)
-              const aPos = ai === -1 ? Infinity : ai
-              const bPos = bi === -1 ? Infinity : bi
-              return aPos - bPos
-            })
-            return sorted.map(([category, items]) => (
-              <div key={category} className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {category}
-                </p>
-                {items.map((item, i) => {
-                  const isRolled = item.tiers && item.tiers.length > 0
-                  return (
-                    <div key={i} className="space-y-0.5">
-                      <div className="flex justify-between">
-                        <span className="flex items-center gap-1">
-                          {item.name}
-                          {isRolled && <Dices className="size-3 text-muted-foreground" />}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {isRolled ? '~' : ''}{item.quantity}×{item.crystalValue.toLocaleString()}✦ = {isRolled ? '~' : ''}{(item.crystalValue * item.quantity).toLocaleString()}✦
-                        </span>
-                      </div>
-                      {isRolled && (
-                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-4 text-xs text-muted-foreground">
-                          {item.tiers!.map((t, ti) => (
-                            <span key={ti}>{t.probability}% → {t.quantity}</span>
-                          ))}
+      {!isSab && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Contents</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              {(() => {
+                // Group by normalised display category
+                const groups = new Map<string, typeof pack.itemsWithDetails>()
+                for (const item of pack.itemsWithDetails) {
+                  const key = normaliseCategory(item.category)
+                  if (!groups.has(key)) groups.set(key, [])
+                  groups.get(key)!.push(item)
+                }
+                // Sort groups by canonical order; unknowns go to the end
+                // Sort items within each group by descending total crystal value
+                for (const items of groups.values()) {
+                  items.sort((a, b) => b.crystalValue * b.quantity - a.crystalValue * a.quantity)
+                }
+                const sorted = Array.from(groups.entries()).sort(([a], [b]) => {
+                  const ai = CATEGORY_ORDER.indexOf(a)
+                  const bi = CATEGORY_ORDER.indexOf(b)
+                  const aPos = ai === -1 ? Infinity : ai
+                  const bPos = bi === -1 ? Infinity : bi
+                  return aPos - bPos
+                })
+                return sorted.map(([category, items]) => (
+                  <div key={category} className="space-y-1.5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {category}
+                    </p>
+                    {items.map((item, i) => {
+                      const isRolled = item.tiers && item.tiers.length > 0
+                      return (
+                        <div key={i} className="space-y-0.5">
+                          <div className="flex justify-between">
+                            <span className="flex items-center gap-1">
+                              {item.name}
+                              {isRolled && <Dices className="size-3 text-muted-foreground" />}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {isRolled ? '~' : ''}
+                              {item.quantity}×{item.crystalValue.toLocaleString()}✦ ={' '}
+                              {isRolled ? '~' : ''}
+                              {(item.crystalValue * item.quantity).toLocaleString()}✦
+                            </span>
+                          </div>
+                          {isRolled && (
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 pl-4 text-xs text-muted-foreground">
+                              {item.tiers!.map((t, ti) => (
+                                <span key={ti}>
+                                  {t.probability}% → {t.quantity}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            ))
-          })()}
-        </CardContent>
-      </Card>
+                      )
+                    })}
+                  </div>
+                ))
+              })()}
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Valuation</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Pack price</span>
-            <span className="font-medium">{priceDisplay}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Crystal equivalent</span>
-            <span className="font-medium">{pack.crystalEquivalent.toLocaleString()}✦</span>
-          </div>
-          <Separator />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Valuation</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Pack price</span>
+                <span className="font-medium">{priceDisplay}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Content crystal equivalent</span>
+                <span className="font-medium">{pack.crystalEquivalent.toLocaleString()}✦</span>
+              </div>
+              <Separator />
 
-          {isCrystalPack ? (
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">
-                Net crystals ({crystalNet >= 0 ? '+' : ''}{crystalNet.toLocaleString()}✦)
-              </span>
-              <GainBadge pct={crystalPct} />
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Expected standard price</span>
-                <span className="flex items-center gap-2">
-                  ${regularValue.toFixed(2)}
-                  <GainBadge pct={regularPct} />
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Expected holiday price</span>
-                <span className="flex items-center gap-2">
-                  ${holidayValue.toFixed(2)}
-                  <GainBadge pct={regularPct} label={`+${holidayPct.toFixed(1)}%`} />
-                </span>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card></>)}
+              {isCrystalPack ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">
+                    Net crystals ({crystalNet >= 0 ? '+' : ''}
+                    {crystalNet.toLocaleString()}✦)
+                  </span>
+                  <GainBadge pct={crystalPct} />
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Expected standard price</span>
+                    <span className="flex items-center gap-2">
+                      ${regularValue.toFixed(2)}
+                      <GainBadge pct={regularPct} />
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Expected holiday price</span>
+                    <span className="flex items-center gap-2">
+                      ${holidayValue.toFixed(2)}
+                      <GainBadge pct={regularPct} label={`+${holidayPct.toFixed(1)}%`} />
+                    </span>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {isAdmin && (
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
             Edit
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => togglePublished({ id: packId })}
-          >
+          <Button variant="outline" size="sm" onClick={() => togglePublished({ id: packId })}>
             {pack.published ? 'Unpublish' : 'Publish'}
           </Button>
           <Button variant="destructive" size="sm" onClick={handleDelete}>

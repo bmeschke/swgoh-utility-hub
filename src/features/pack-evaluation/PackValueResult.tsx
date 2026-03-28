@@ -34,7 +34,8 @@ function GainBadge({ pct, displayPct }: { pct: number; displayPct?: number }) {
   const variant = pct > 5 ? 'default' : pct >= -5 ? 'secondary' : 'destructive'
   return (
     <Badge variant={variant} className="ml-2 text-xs">
-      {sign}{shown.toFixed(1)}% — {label}
+      {sign}
+      {shown.toFixed(1)}% — {label}
     </Badge>
   )
 }
@@ -43,7 +44,7 @@ function GainBadge({ pct, displayPct }: { pct: number; displayPct?: number }) {
 function cumulativeEffectivePrice(
   sabTiers: SabTierDraft[],
   sabDiscounts: SabDiscount[] | undefined,
-  upToIndex: number,
+  upToIndex: number
 ): number {
   const raw = sabTiers.slice(0, upToIndex + 1).reduce((s, t) => s + (parseFloat(t.price) || 0), 0)
   const discount = sabDiscounts ? parseFloat(sabDiscounts[upToIndex]?.discountAmount ?? '') || 0 : 0
@@ -60,7 +61,8 @@ export default function PackValueResult({
   sabDiscounts,
 }: PackValueResultProps) {
   const { user } = useUser()
-  const isAdmin = !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
+  const isAdmin =
+    !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const isCrystalPack = priceCurrency === 'crystals'
@@ -72,29 +74,32 @@ export default function PackValueResult({
   const crystalNet = crystalEquivalent - price
 
   // ─── SAB per-tier calculations ────────────────────────────────────────────
-  const sabTierRows = packType === 'sab' && sabTiers
-    ? sabTiers.map((tier, i) => {
-        if (tier.items.length === 0) return null
-        const tierCE = calcSabTierCE(tier)
-        const cumulative = cumulativeEffectivePrice(sabTiers, sabDiscounts, i)
-        const prevCumulative = i > 0 ? cumulativeEffectivePrice(sabTiers, sabDiscounts, i - 1) : 0
-        const incrementalPrice = cumulative - prevCumulative
-        const standardVal = calcDollarValue(tierCE, 'regular')
-        const holidayVal = calcDollarValue(tierCE, 'holiday')
-        const stdPct = calcGainLossPercent(standardVal, incrementalPrice)
-        const holPct = calcGainLossPercent(holidayVal, incrementalPrice)
-        return { i, tierCE, incrementalPrice, standardVal, holidayVal, stdPct, holPct }
-      }).filter(Boolean)
-    : []
+  const sabTierRows =
+    packType === 'sab' && sabTiers
+      ? sabTiers
+          .map((tier, i) => {
+            if (tier.items.length === 0) return null
+            const tierCE = calcSabTierCE(tier)
+            const cumulative = cumulativeEffectivePrice(sabTiers, sabDiscounts, i)
+            const prevCumulative =
+              i > 0 ? cumulativeEffectivePrice(sabTiers, sabDiscounts, i - 1) : 0
+            const incrementalPrice = cumulative - prevCumulative
+            const standardVal = calcDollarValue(tierCE, 'regular')
+            const holidayVal = calcDollarValue(tierCE, 'holiday')
+            const stdPct = calcGainLossPercent(standardVal, incrementalPrice)
+            const holPct = calcGainLossPercent(holidayVal, incrementalPrice)
+            return { i, tierCE, incrementalPrice, standardVal, holidayVal, stdPct, holPct }
+          })
+          .filter(Boolean)
+      : []
 
   // ─── SAB total (across all populated tiers) ───────────────────────────────
   const lastPopulatedIdx = sabTiers
     ? sabTiers.reduce((last, t, i) => (t.items.length > 0 ? i : last), -1)
     : -1
   const sabTotalCE = sabTierRows.reduce((s, t) => s + (t?.tierCE ?? 0), 0)
-  const sabTotalPrice = lastPopulatedIdx >= 0
-    ? cumulativeEffectivePrice(sabTiers!, sabDiscounts, lastPopulatedIdx)
-    : 0
+  const sabTotalPrice =
+    lastPopulatedIdx >= 0 ? cumulativeEffectivePrice(sabTiers!, sabDiscounts, lastPopulatedIdx) : 0
   const sabTotalStdVal = calcDollarValue(sabTotalCE, 'regular')
   const sabTotalHolVal = calcDollarValue(sabTotalCE, 'holiday')
   const sabTotalStdPct = calcGainLossPercent(sabTotalStdVal, sabTotalPrice)
@@ -109,49 +114,56 @@ export default function PackValueResult({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-
           {/* ── SAB layout ── */}
           {packType === 'sab' && sabTierRows.length > 0 && (
             <>
               {/* Per-tier breakdown — only when 2+ tiers are populated */}
               {sabTierRows.length > 1 && (
                 <>
-                  {sabTierRows.map((t) => t && (
-                    <div key={t.i} className="space-y-3">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Tier {t.i + 1}{t.incrementalPrice > 0 ? ` — $${t.incrementalPrice.toFixed(2)}` : ''}
-                      </p>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Avg crystal equivalent</span>
-                        <span className="font-medium">{Math.round(t.tierCE).toLocaleString()}✦</span>
-                      </div>
-                      {t.incrementalPrice > 0 && (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Regular pricing</span>
-                            <span className="flex items-center">
-                              ${t.standardVal.toFixed(2)}
-                              <GainBadge pct={t.stdPct} />
+                  {sabTierRows.map(
+                    (t) =>
+                      t && (
+                        <div key={t.i} className="space-y-3">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Tier {t.i + 1}
+                            {t.incrementalPrice > 0 ? ` — $${t.incrementalPrice.toFixed(2)}` : ''}
+                          </p>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Content avg crystal equivalent
+                            </span>
+                            <span className="font-medium">
+                              {Math.round(t.tierCE).toLocaleString()}✦
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Holiday pricing</span>
-                            <span className="flex items-center">
-                              ${t.holidayVal.toFixed(2)}
-                              <GainBadge pct={t.stdPct} displayPct={t.holPct} />
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                          {t.incrementalPrice > 0 && (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Regular pricing</span>
+                                <span className="flex items-center">
+                                  ${t.standardVal.toFixed(2)}
+                                  <GainBadge pct={t.stdPct} />
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Holiday pricing</span>
+                                <span className="flex items-center">
+                                  ${t.holidayVal.toFixed(2)}
+                                  <GainBadge pct={t.stdPct} displayPct={t.holPct} />
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )
+                  )}
                   <Separator />
                 </>
               )}
 
               {/* Totals (also serves as the flat view for single-tier) */}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Crystal equivalent</span>
+                <span className="text-muted-foreground">Content crystal equivalent</span>
                 <span className="font-medium">{Math.round(sabTotalCE).toLocaleString()}✦</span>
               </div>
               {sabTotalPrice > 0 && (
@@ -184,8 +196,10 @@ export default function PackValueResult({
           {packType !== 'sab' && (
             <>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Crystal equivalent</span>
-                <span className="font-medium">{Math.round(crystalEquivalent).toLocaleString()}✦</span>
+                <span className="text-muted-foreground">Content crystal equivalent</span>
+                <span className="font-medium">
+                  {Math.round(crystalEquivalent).toLocaleString()}✦
+                </span>
               </div>
 
               {price > 0 && (
@@ -201,7 +215,8 @@ export default function PackValueResult({
                   {isCrystalPack ? (
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">
-                        Net crystals ({crystalNet >= 0 ? '+' : ''}{crystalNet.toLocaleString()}✦)
+                        Net crystals ({crystalNet >= 0 ? '+' : ''}
+                        {crystalNet.toLocaleString()}✦)
                       </span>
                       <GainBadge pct={crystalPct} />
                     </div>
