@@ -14,14 +14,17 @@ import {
   DEFAULT_SAB_DISCOUNTS,
   type SabTierDraft,
   type SabDiscount,
+  DEFAULT_ASCENSION_TIERS,
+  type AscensionTierDraft,
 } from '@/lib/valuations'
 import { cn } from '@/lib/utils'
 import ItemCombobox, { type ItemComboboxHandle } from '@/features/pack-evaluation/ItemCombobox'
 import PackLineItem from '@/features/pack-evaluation/PackLineItem'
 import SabPackBuilder from '@/features/pack-evaluation/SabPackBuilder'
+import AscensionPackBuilder from '@/features/pack-evaluation/AscensionPackBuilder'
 import type { Doc } from '../../../convex/_generated/dataModel'
 
-type PackType = 'standard' | 'sab'
+type PackType = 'standard' | 'sab' | 'ascension'
 
 interface LineItem {
   itemId: string
@@ -69,7 +72,8 @@ function sabDiscountsToDraft(sabDiscounts: Doc<'packs'>['sabDiscounts']): SabDis
 export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormProps) {
   const updatePack = useMutation(api.packs.update)
 
-  const initialPackType: PackType = pack.packType === 'sab' ? 'sab' : 'standard'
+  const initialPackType: PackType =
+    pack.packType === 'sab' ? 'sab' : pack.packType === 'ascension' ? 'ascension' : 'standard'
   const [packType, setPackType] = useState<PackType>(initialPackType)
 
   // Initialise SAB draft state — use sabTiersWithDetails for item names if available
@@ -94,6 +98,26 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
   const [sabDiscounts, setSabDiscounts] = useState<SabDiscount[]>(
     sabDiscountsToDraft(pack.sabDiscounts)
   )
+
+  // Initialise Ascension draft state
+  const enrichedAscensionTiers = (
+    pack as { ascensionTiersWithDetails?: typeof pack.ascensionTiers }
+  ).ascensionTiersWithDetails
+  const initialAscensionTiers: AscensionTierDraft[] = (() => {
+    const src = enrichedAscensionTiers ?? pack.ascensionTiers
+    if (!src || src.length === 0) return DEFAULT_ASCENSION_TIERS
+    return src.map((tier) => ({
+      price: String(tier.price),
+      items: tier.items.map((li) => ({
+        itemId: li.itemId,
+        name: (li as { name?: string }).name ?? '…',
+        crystalValue: (li as { crystalValue?: number }).crystalValue ?? 0,
+        quantity: li.quantity,
+      })),
+    }))
+  })()
+
+  const [ascensionTiers, setAscensionTiers] = useState<AscensionTierDraft[]>(initialAscensionTiers)
 
   const {
     control,
@@ -166,6 +190,20 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
           .map((d) => ({ quantity: d.quantity, discountAmount: parseFloat(d.discountAmount) })),
         notes: values.notes || undefined,
       })
+    } else if (packType === 'ascension') {
+      await updatePack({
+        id: pack._id,
+        name: values.name,
+        packType: 'ascension',
+        ascensionTiers: ascensionTiers.map((tier) => ({
+          price: parseFloat(tier.price) || 0,
+          items: tier.items.map((item) => ({
+            itemId: item.itemId as Id<'items'>,
+            quantity: item.quantity,
+          })),
+        })),
+        notes: values.notes || undefined,
+      })
     } else {
       await updatePack({
         id: pack._id,
@@ -215,6 +253,16 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
             )}
           >
             Slice-A-Bundle
+          </button>
+          <button
+            type="button"
+            onClick={() => setPackType('ascension')}
+            className={cn(
+              'px-4 py-1.5 border-l transition-colors',
+              packType === 'ascension' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+            )}
+          >
+            Ascension
           </button>
         </div>
       </div>
@@ -305,7 +353,7 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
             </p>
           )}
         </>
-      ) : (
+      ) : packType === 'sab' ? (
         <SabPackBuilder
           tiers={sabTiers}
           discounts={sabDiscounts}
@@ -314,6 +362,8 @@ export default function EditPackForm({ pack, onCancel, onSaved }: EditPackFormPr
             setSabDiscounts(d)
           }}
         />
+      ) : (
+        <AscensionPackBuilder tiers={ascensionTiers} onChange={(t) => setAscensionTiers(t)} />
       )}
 
       <div className="space-y-1.5">

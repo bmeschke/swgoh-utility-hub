@@ -12,6 +12,8 @@ import {
   type SabTierDraft,
   type SabDiscount,
   calcSabTierCE,
+  type AscensionTierDraft,
+  calcAscensionTierCE,
 } from '@/lib/valuations'
 import SaveToLibraryDialog from './SaveToLibraryDialog'
 import type { EvalLineItem } from './EvaluatePackForm'
@@ -25,6 +27,12 @@ interface PackValueResultProps {
   items: EvalLineItem[]
   sabTiers?: SabTierDraft[]
   sabDiscounts?: SabDiscount[]
+  ascensionTiers?: AscensionTierDraft[]
+}
+
+/** Simple cumulative price for ascension tiers 0..upToIndex (no discounts) */
+function ascensionCumulativePrice(tiers: AscensionTierDraft[], upToIndex: number): number {
+  return tiers.slice(0, upToIndex + 1).reduce((s, t) => s + (parseFloat(t.price) || 0), 0)
 }
 
 function GainBadge({ pct, displayPct }: { pct: number; displayPct?: number }) {
@@ -59,10 +67,12 @@ export default function PackValueResult({
   items,
   sabTiers,
   sabDiscounts,
+  ascensionTiers,
 }: PackValueResultProps) {
   const { user } = useUser()
   const isAdmin =
-    !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
+    import.meta.env.DEV ||
+    (!!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID)
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const isCrystalPack = priceCurrency === 'crystals'
@@ -105,12 +115,68 @@ export default function PackValueResult({
   const sabTotalStdPct = calcGainLossPercent(sabTotalStdVal, sabTotalPrice)
   const sabTotalHolPct = calcGainLossPercent(sabTotalHolVal, sabTotalPrice)
 
+  // ─── Ascension per-tier calculations ─────────────────────────────────────
+  const ascensionTierRows =
+    packType === 'ascension' && ascensionTiers
+      ? ascensionTiers
+          .map((tier, i) => {
+            if (tier.items.length === 0) return null
+            const tierCE = calcAscensionTierCE(tier)
+            const cumulative = ascensionCumulativePrice(ascensionTiers, i)
+            const prevCumulative = i > 0 ? ascensionCumulativePrice(ascensionTiers, i - 1) : 0
+            const incrementalPrice = cumulative - prevCumulative
+            const cumulativeCE = ascensionTiers
+              .slice(0, i + 1)
+              .reduce((s, t) => s + calcAscensionTierCE(t), 0)
+            const standardVal = calcDollarValue(tierCE, 'regular')
+            const holidayVal = calcDollarValue(tierCE, 'holiday')
+            const stdPct = calcGainLossPercent(standardVal, incrementalPrice)
+            const holPct = calcGainLossPercent(holidayVal, incrementalPrice)
+            return {
+              i,
+              tierCE,
+              cumulativeCE,
+              incrementalPrice,
+              cumulativePrice: cumulative,
+              standardVal,
+              holidayVal,
+              stdPct,
+              holPct,
+            }
+          })
+          .filter(Boolean)
+      : []
+
+  // ─── Ascension total (across all populated tiers) ────────────────────────
+  const lastAscensionPopulatedIdx = ascensionTiers
+    ? ascensionTiers.reduce((last, t, i) => (t.items.length > 0 ? i : last), -1)
+    : -1
+  const ascensionTotalCE = ascensionTierRows.reduce((s, t) => s + (t?.tierCE ?? 0), 0)
+  const ascensionTotalEffectivePrice =
+    lastAscensionPopulatedIdx >= 0
+      ? ascensionCumulativePrice(ascensionTiers!, lastAscensionPopulatedIdx)
+      : 0
+  const ascensionTotalStdVal = calcDollarValue(ascensionTotalCE, 'regular')
+  const ascensionTotalHolVal = calcDollarValue(ascensionTotalCE, 'holiday')
+  const ascensionTotalStdPct = calcGainLossPercent(
+    ascensionTotalStdVal,
+    ascensionTotalEffectivePrice
+  )
+  const ascensionTotalHolPct = calcGainLossPercent(
+    ascensionTotalHolVal,
+    ascensionTotalEffectivePrice
+  )
+
   return (
     <>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {packType === 'sab' ? 'Slice-A-Bundle Value' : 'Pack Value'}
+            {packType === 'sab'
+              ? 'Slice-A-Bundle Value'
+              : packType === 'ascension'
+                ? 'Ascension Value'
+                : 'Pack Value'}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
@@ -190,8 +256,98 @@ export default function PackValueResult({
             </>
           )}
 
+          {/* ── Ascension layout ── */}
+          {packType === 'ascension' && ascensionTierRows.length > 0 && (
+            <>
+              {/* Per-tier breakdown — only when 2+ tiers are populated */}
+              {ascensionTierRows.length > 1 && (
+                <>
+                  {ascensionTierRows.map(
+                    (t) =>
+                      t && (
+                        <div key={t.i} className="space-y-3">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Tier {t.i + 1}
+                            {t.incrementalPrice > 0 ? ` — $${t.incrementalPrice.toFixed(2)}` : ''}
+                          </p>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Content crystal value</span>
+                            <span className="font-medium">
+                              {Math.round(t.tierCE).toLocaleString()}✦
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Cumulative crystal value</span>
+                            <span className="font-medium">
+                              {Math.round(t.cumulativeCE).toLocaleString()}✦
+                            </span>
+                          </div>
+                          {t.cumulativePrice > 0 && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Cumulative price</span>
+                              <span className="font-medium">${t.cumulativePrice.toFixed(2)}</span>
+                            </div>
+                          )}
+                          {t.incrementalPrice > 0 && (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Regular pricing</span>
+                                <span className="flex items-center">
+                                  ${t.standardVal.toFixed(2)}
+                                  <GainBadge pct={t.stdPct} />
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Holiday pricing</span>
+                                <span className="flex items-center">
+                                  ${t.holidayVal.toFixed(2)}
+                                  <GainBadge pct={t.stdPct} displayPct={t.holPct} />
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )
+                  )}
+                  <Separator />
+                </>
+              )}
+
+              {/* Totals */}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Content crystal value</span>
+                <span className="font-medium">
+                  {Math.round(ascensionTotalCE).toLocaleString()}✦
+                </span>
+              </div>
+              {ascensionTotalEffectivePrice > 0 && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bundle price</span>
+                    <span className="font-medium">${ascensionTotalEffectivePrice.toFixed(2)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Regular pricing</span>
+                    <span className="flex items-center">
+                      ${ascensionTotalStdVal.toFixed(2)}
+                      <GainBadge pct={ascensionTotalStdPct} />
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Holiday pricing</span>
+                    <span className="flex items-center">
+                      ${ascensionTotalHolVal.toFixed(2)}
+                      <GainBadge pct={ascensionTotalStdPct} displayPct={ascensionTotalHolPct} />
+                    </span>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
           {/* ── Standard pack layout ── */}
-          {packType !== 'sab' && (
+          {packType !== 'sab' && packType !== 'ascension' && (
             <>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Content crystal value</span>
@@ -263,6 +419,7 @@ export default function PackValueResult({
           crystalEquivalent={crystalEquivalent}
           sabTiers={sabTiers}
           sabDiscounts={sabDiscounts}
+          ascensionTiers={ascensionTiers}
         />
       )}
     </>

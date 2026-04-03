@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { PriceCurrency, SabTierDraft, SabDiscount } from '@/lib/valuations'
+import type { PriceCurrency, SabTierDraft, SabDiscount, AscensionTierDraft } from '@/lib/valuations'
 import type { EvalLineItem } from './EvaluatePackForm'
 import type { PackType } from './EvaluatePackForm'
 
@@ -36,6 +36,7 @@ interface SaveToLibraryDialogProps {
   crystalEquivalent: number
   sabTiers?: SabTierDraft[]
   sabDiscounts?: SabDiscount[]
+  ascensionTiers?: AscensionTierDraft[]
 }
 
 export default function SaveToLibraryDialog({
@@ -47,6 +48,7 @@ export default function SaveToLibraryDialog({
   priceCurrency,
   sabTiers,
   sabDiscounts,
+  ascensionTiers,
 }: SaveToLibraryDialogProps) {
   const createPack = useMutation(api.packs.create)
 
@@ -59,43 +61,58 @@ export default function SaveToLibraryDialog({
 
   async function onSubmit(values: FormValues) {
     try {
-    if (packType === 'sab' && sabTiers) {
-      await createPack({
-        name: values.name,
-        packType: 'sab',
-        price: 0, // computed server-side from sabTiers[0].price
-        items: [],
-        sabTiers: sabTiers.map((tier) => ({
-          price: parseFloat(tier.price) || 0,
-          items: tier.items.map((item) => ({
+      if (packType === 'sab' && sabTiers) {
+        await createPack({
+          name: values.name,
+          packType: 'sab',
+          price: 0, // computed server-side from sabTiers[0].price
+          items: [],
+          sabTiers: sabTiers.map((tier) => ({
+            price: parseFloat(tier.price) || 0,
+            items: tier.items.map((item) => ({
+              itemId: item.itemId as Id<'items'>,
+              quantity: item.quantity,
+            })),
+          })),
+          sabDiscounts: sabDiscounts
+            ?.filter((d) => parseFloat(d.discountAmount) > 0)
+            .map((d) => ({
+              quantity: d.quantity,
+              discountAmount: parseFloat(d.discountAmount),
+            })),
+          notes: values.notes || undefined,
+        })
+      } else if (packType === 'ascension' && ascensionTiers) {
+        await createPack({
+          name: values.name,
+          packType: 'ascension',
+          price: 0, // computed server-side from ascensionTiers[0].price
+          items: [],
+          ascensionTiers: ascensionTiers.map((tier) => ({
+            price: parseFloat(tier.price) || 0,
+            items: tier.items.map((item) => ({
+              itemId: item.itemId as Id<'items'>,
+              quantity: item.quantity,
+            })),
+          })),
+          notes: values.notes || undefined,
+        })
+      } else {
+        await createPack({
+          name: values.name,
+          price,
+          priceCurrency,
+          items: items.map((item) => ({
             itemId: item.itemId as Id<'items'>,
             quantity: item.quantity,
+            tiers: item.tiers,
           })),
-        })),
-        sabDiscounts: sabDiscounts
-          ?.filter((d) => parseFloat(d.discountAmount) > 0)
-          .map((d) => ({
-            quantity: d.quantity,
-            discountAmount: parseFloat(d.discountAmount),
-          })),
-        notes: values.notes || undefined,
-      })
-    } else {
-      await createPack({
-        name: values.name,
-        price,
-        priceCurrency,
-        items: items.map((item) => ({
-          itemId: item.itemId as Id<'items'>,
-          quantity: item.quantity,
-          tiers: item.tiers,
-        })),
-        notes: values.notes || undefined,
-      })
-    }
-    toast.success(`"${values.name}" saved to library.`)
-    reset()
-    onOpenChange(false)
+          notes: values.notes || undefined,
+        })
+      }
+      toast.success(`"${values.name}" saved to library.`)
+      reset()
+      onOpenChange(false)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       if (msg.includes('Not authenticated') || msg.includes('not authenticated')) {
@@ -115,22 +132,12 @@ export default function SaveToLibraryDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="pack-name">Pack name</Label>
-            <Input
-              id="pack-name"
-              placeholder="e.g. Relic Boost SAB"
-              {...register('name')}
-            />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
+            <Input id="pack-name" placeholder="e.g. Relic Boost SAB" {...register('name')} />
+            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pack-notes">Notes (optional)</Label>
-            <Input
-              id="pack-notes"
-              placeholder="Any additional context..."
-              {...register('notes')}
-            />
+            <Input id="pack-notes" placeholder="Any additional context..." {...register('notes')} />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>

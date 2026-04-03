@@ -17,6 +17,7 @@ import {
 import { ArrowLeftIcon, Dices } from 'lucide-react'
 import EditPackForm from './EditPackForm'
 import SabPackDetail from './SabPackDetail'
+import AscensionPackDetail from './AscensionPackDetail'
 import ItemValuesModal from '@/components/ItemValuesModal'
 
 // Maps a raw item category to a normalised display label.
@@ -71,7 +72,8 @@ export default function PackDetail({ packId }: PackDetailProps) {
   const navigate = useNavigate()
   const { user } = useUser()
   const isAdmin =
-    !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
+    import.meta.env.DEV ||
+    (!!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID)
   const [isEditing, setIsEditing] = useState(false)
 
   const pack = useQuery(api.packs.get, { id: packId })
@@ -102,6 +104,7 @@ export default function PackDetail({ packId }: PackDetailProps) {
   }
 
   const isSab = pack.packType === 'sab'
+  const isAscension = pack.packType === 'ascension'
   const isCrystalPack = pack.priceCurrency === 'crystals'
   const priceDisplay = isCrystalPack
     ? `${pack.price.toLocaleString()}✦`
@@ -140,7 +143,11 @@ export default function PackDetail({ packId }: PackDetailProps) {
 
       {isSab ? <SabPackDetail pack={pack as Parameters<typeof SabPackDetail>[0]['pack']} /> : null}
 
-      {!isSab && (
+      {isAscension ? (
+        <AscensionPackDetail pack={pack as Parameters<typeof AscensionPackDetail>[0]['pack']} />
+      ) : null}
+
+      {!isSab && !isAscension && (
         <>
           <Card>
             <CardHeader>

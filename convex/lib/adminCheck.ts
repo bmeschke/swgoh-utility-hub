@@ -2,6 +2,10 @@ import { ConvexError } from 'convex/values'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
 
 export async function requireAdmin(ctx: QueryCtx | MutationCtx) {
+  // Explicit dev bypass — set CONVEX_DEV_BYPASS=true in .env.local only.
+  // This env var is never present in the production Convex deployment.
+  if (process.env.CONVEX_DEV_BYPASS === 'true') return null
+
   // In local dev (no ADMIN_USER_ID configured) bypass auth so the admin
   // UI works without a full Clerk + env-var setup.
   const adminId = process.env.ADMIN_USER_ID

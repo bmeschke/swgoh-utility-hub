@@ -11,14 +11,19 @@ import {
   calcSabTotalPrice,
   type SabTierDraft,
   type SabDiscount,
+  DEFAULT_ASCENSION_TIERS,
+  calcAscensionTotalCE,
+  calcAscensionTotalPrice,
+  type AscensionTierDraft,
 } from '@/lib/valuations'
 import { cn } from '@/lib/utils'
 import ItemCombobox, { type ItemComboboxHandle } from './ItemCombobox'
 import PackLineItem from './PackLineItem'
 import PackValueResult from './PackValueResult'
 import SabPackBuilder from './SabPackBuilder'
+import AscensionPackBuilder from './AscensionPackBuilder'
 
-export type PackType = 'standard' | 'sab'
+export type PackType = 'standard' | 'sab' | 'ascension'
 
 export interface EvalLineItem {
   itemId: string
@@ -38,6 +43,8 @@ export default function EvaluatePackForm() {
   const [packType, setPackType] = useState<PackType>('standard')
   const [sabTiers, setSabTiers] = useState<SabTierDraft[]>(DEFAULT_SAB_TIERS)
   const [sabDiscounts, setSabDiscounts] = useState<SabDiscount[]>(DEFAULT_SAB_DISCOUNTS)
+  const [ascensionTiers, setAscensionTiers] =
+    useState<AscensionTierDraft[]>(DEFAULT_ASCENSION_TIERS)
 
   const { control, register, watch, setValue } = useForm<FormValues>({
     defaultValues: { items: [], price: '', priceCurrency: 'usd' },
@@ -55,8 +62,15 @@ export default function EvaluatePackForm() {
   const sabTotalCE = calcSabAvgCE(sabTiers)
   const sabTotalPrice = calcSabTotalPrice(sabTiers)
 
+  const ascensionTotalCE = calcAscensionTotalCE(ascensionTiers)
+  const ascensionTotalPrice = calcAscensionTotalPrice(ascensionTiers)
+
   const showResult =
-    packType === 'standard' ? watchedItems.length > 0 : sabTiers.some((t) => t.items.length > 0)
+    packType === 'standard'
+      ? watchedItems.length > 0
+      : packType === 'sab'
+        ? sabTiers.some((t) => t.items.length > 0)
+        : ascensionTiers.some((t) => t.items.length > 0)
 
   const comboboxRef = useRef<ItemComboboxHandle>(null)
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -106,6 +120,16 @@ export default function EvaluatePackForm() {
             )}
           >
             Slice-A-Bundle
+          </button>
+          <button
+            type="button"
+            onClick={() => setPackType('ascension')}
+            className={cn(
+              'px-4 py-1.5 border-l transition-colors',
+              packType === 'ascension' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+            )}
+          >
+            Ascension
           </button>
         </div>
       </div>
@@ -187,7 +211,7 @@ export default function EvaluatePackForm() {
             )}
           </div>
         </>
-      ) : (
+      ) : packType === 'sab' ? (
         <SabPackBuilder
           tiers={sabTiers}
           discounts={sabDiscounts}
@@ -196,17 +220,32 @@ export default function EvaluatePackForm() {
             setSabDiscounts(d)
           }}
         />
+      ) : (
+        <AscensionPackBuilder tiers={ascensionTiers} onChange={(t) => setAscensionTiers(t)} />
       )}
 
       {showResult && (
         <PackValueResult
           packType={packType}
-          crystalEquivalent={packType === 'standard' ? crystalEquivalent : sabTotalCE}
-          price={packType === 'standard' ? price : sabTotalPrice}
+          crystalEquivalent={
+            packType === 'standard'
+              ? crystalEquivalent
+              : packType === 'sab'
+                ? sabTotalCE
+                : ascensionTotalCE
+          }
+          price={
+            packType === 'standard'
+              ? price
+              : packType === 'sab'
+                ? sabTotalPrice
+                : ascensionTotalPrice
+          }
           priceCurrency={packType === 'standard' ? priceCurrency : 'usd'}
           items={watchedItems}
           sabTiers={packType === 'sab' ? sabTiers : undefined}
           sabDiscounts={packType === 'sab' ? sabDiscounts : undefined}
+          ascensionTiers={packType === 'ascension' ? ascensionTiers : undefined}
         />
       )}
     </div>

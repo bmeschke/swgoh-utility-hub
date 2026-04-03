@@ -65,7 +65,7 @@ export default defineSchema({
 
   packs: defineTable({
     name: v.string(),
-    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'))),
+    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'), v.literal('ascension'))),
     price: v.number(),
     items: v.array(
       v.object({
@@ -98,6 +98,21 @@ export default defineSchema({
         v.object({
           quantity: v.number(),
           discountAmount: v.number(),
+        })
+      )
+    ),
+    // Ascension-specific fields
+    ascensionTiers: v.optional(
+      v.array(
+        v.object({
+          price: v.number(),
+          crystalEquivalent: v.number(),
+          items: v.array(
+            v.object({
+              itemId: v.id('items'),
+              quantity: v.number(),
+            })
+          ),
         })
       )
     ),

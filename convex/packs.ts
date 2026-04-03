@@ -23,6 +23,11 @@ const sabDiscountValidator = v.object({
   discountAmount: v.number(),
 })
 
+const ascensionTierInputValidator = v.object({
+  price: v.number(),
+  items: v.array(v.object({ itemId: v.id('items'), quantity: v.number() })),
+})
+
 /** Public: list all published packs */
 export const listPublished = query({
   args: {},
@@ -87,7 +92,29 @@ export const get = query({
       )
     }
 
-    return { ...pack, itemsWithDetails, sabTiersWithDetails }
+    // Ascension pack: join item details for each tier
+    let ascensionTiersWithDetails: typeof pack.ascensionTiers | undefined = undefined
+    if (pack.ascensionTiers) {
+      ascensionTiersWithDetails = await Promise.all(
+        pack.ascensionTiers.map(async (tier) => ({
+          ...tier,
+          items: await Promise.all(
+            tier.items.map(async (line) => {
+              const item = await ctx.db.get(line.itemId)
+              return {
+                itemId: line.itemId,
+                quantity: line.quantity,
+                name: item?.name ?? 'Unknown',
+                category: item?.category,
+                crystalValue: item?.crystalValue ?? 0,
+              }
+            })
+          ),
+        }))
+      )
+    }
+
+    return { ...pack, itemsWithDetails, sabTiersWithDetails, ascensionTiersWithDetails }
   },
 })
 
@@ -134,6 +161,40 @@ async function computeSabFields(ctx: MutationCtx, sabTiers: SabTierInput[]) {
   return { enrichedTiers, avgCE: totalCE }
 }
 
+// ─── Ascension helpers ────────────────────────────────────────────────────────
+
+type AscensionTierInput = {
+  price: number
+  items: Array<{ itemId: string; quantity: number }>
+}
+
+async function computeAscensionFields(ctx: MutationCtx, ascensionTiers: AscensionTierInput[]) {
+  let totalCE = 0
+
+  const enrichedTiers = await Promise.all(
+    ascensionTiers.map(async (tier) => {
+      let tierCE = 0
+      for (const line of tier.items) {
+        const item = await ctx.db.get(line.itemId as never)
+        if (!item) throw new ConvexError(`Item not found: ${line.itemId}`)
+        // Sum ALL items in the tier (no averaging — buyer receives all items)
+        tierCE += (item as { crystalValue: number }).crystalValue * line.quantity
+      }
+      totalCE += tierCE
+      return {
+        price: tier.price,
+        crystalEquivalent: tierCE,
+        items: tier.items.map((line) => ({
+          itemId: line.itemId as Id<'items'>,
+          quantity: line.quantity,
+        })),
+      }
+    })
+  )
+
+  return { enrichedTiers, totalCE }
+}
+
 /** Admin: create a pack, computing crystalEquivalent server-side */
 export const create = mutation({
   args: {
@@ -142,9 +203,10 @@ export const create = mutation({
     priceCurrency: v.optional(v.union(v.literal('usd'), v.literal('crystals'))),
     items: v.array(itemLineValidator),
     notes: v.optional(v.string()),
-    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'))),
+    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'), v.literal('ascension'))),
     sabTiers: v.optional(v.array(sabTierInputValidator)),
     sabDiscounts: v.optional(v.array(sabDiscountValidator)),
+    ascensionTiers: v.optional(v.array(ascensionTierInputValidator)),
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
@@ -163,6 +225,21 @@ export const create = mutation({
         notes: args.notes,
         sabTiers: enrichedTiers,
         sabDiscounts: args.sabDiscounts,
+      })
+    }
+
+    if (args.packType === 'ascension' && args.ascensionTiers) {
+      const { enrichedTiers, totalCE } = await computeAscensionFields(ctx, args.ascensionTiers)
+      return await ctx.db.insert('packs', {
+        name: args.name,
+        packType: 'ascension',
+        price: enrichedTiers[0]?.price ?? 0, // tier 1 price for "From $X" display
+        priceCurrency: 'usd',
+        items: [],
+        crystalEquivalent: Math.round(totalCE),
+        published: true,
+        notes: args.notes,
+        ascensionTiers: enrichedTiers,
       })
     }
 
@@ -196,20 +273,27 @@ export const update = mutation({
     priceCurrency: v.optional(v.union(v.literal('usd'), v.literal('crystals'))),
     items: v.optional(v.array(itemLineValidator)),
     notes: v.optional(v.string()),
-    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'))),
+    packType: v.optional(v.union(v.literal('standard'), v.literal('sab'), v.literal('ascension'))),
     sabTiers: v.optional(v.array(sabTierInputValidator)),
     sabDiscounts: v.optional(v.array(sabDiscountValidator)),
+    ascensionTiers: v.optional(v.array(ascensionTierInputValidator)),
   },
   handler: async (ctx, args) => {
     const identity = await requireAdmin(ctx)
     await rateLimit(ctx, { name: 'adminMutation', key: identity?.subject ?? 'dev', throws: true })
-    const { id, items, sabTiers, ...rest } = args
+    const { id, items, sabTiers, ascensionTiers, ...rest } = args
     const updates: Record<string, unknown> = { ...rest }
 
     if (args.packType === 'sab' && sabTiers !== undefined) {
       const { enrichedTiers, avgCE } = await computeSabFields(ctx, sabTiers)
       updates.sabTiers = enrichedTiers
       updates.crystalEquivalent = Math.round(avgCE)
+      updates.price = enrichedTiers[0]?.price ?? 0
+      updates.items = []
+    } else if (args.packType === 'ascension' && ascensionTiers !== undefined) {
+      const { enrichedTiers, totalCE } = await computeAscensionFields(ctx, ascensionTiers)
+      updates.ascensionTiers = enrichedTiers
+      updates.crystalEquivalent = Math.round(totalCE)
       updates.price = enrichedTiers[0]?.price ?? 0
       updates.items = []
     } else if (items !== undefined) {
