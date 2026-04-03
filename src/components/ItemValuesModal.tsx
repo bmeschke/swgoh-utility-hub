@@ -113,15 +113,17 @@ function ItemValuesContent() {
 export default function ItemValuesModal() {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1.5 text-muted-foreground hover:text-foreground"
-        >
-          <InfoIcon className="size-4" />
-          Item Values
-        </Button>
+      <DialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-muted-foreground hover:text-foreground"
+          />
+        }
+      >
+        <InfoIcon className="size-4" />
+        Item Values
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
