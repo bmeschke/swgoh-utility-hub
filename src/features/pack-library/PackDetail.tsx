@@ -17,6 +17,7 @@ import {
 import { ArrowLeftIcon, Dices } from 'lucide-react'
 import EditPackForm from './EditPackForm'
 import SabPackDetail from './SabPackDetail'
+import ItemValuesModal from '@/components/ItemValuesModal'
 
 // Maps a raw item category to a normalised display label.
 // All "Shard - *" variants collapse to "Shards".
@@ -129,9 +130,12 @@ export default function PackDetail({ packId }: PackDetailProps) {
         Back
       </button>
 
-      <div>
-        <h1 className="text-2xl font-bold">{pack.name}</h1>
-        {pack.notes && <p className="mt-1 text-sm text-muted-foreground">{pack.notes}</p>}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">{pack.name}</h1>
+          {pack.notes && <p className="mt-1 text-sm text-muted-foreground">{pack.notes}</p>}
+        </div>
+        <ItemValuesModal />
       </div>
 
       {isSab ? <SabPackDetail pack={pack as Parameters<typeof SabPackDetail>[0]['pack']} /> : null}

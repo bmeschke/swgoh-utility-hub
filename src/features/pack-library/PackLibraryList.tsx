@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { calcDollarValue, calcGainLossPercent } from '@/lib/valuations'
 import PackCard from './PackCard'
-import { SearchIcon } from 'lucide-react'
+import { SearchIcon, XIcon } from 'lucide-react'
 
 type ValueFilter = 'excellent' | 'good' | 'fair' | 'scam' | null
 
@@ -55,7 +55,8 @@ function matchesFilter(pct: number, filter: ValueFilter): boolean {
 
 export default function PackLibraryList() {
   const { user } = useUser()
-  const isAdmin = !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
+  const isAdmin =
+    !!import.meta.env.VITE_ADMIN_USER_ID && user?.id === import.meta.env.VITE_ADMIN_USER_ID
   const publishedPacks = useQuery(api.packs.listPublished, isAdmin ? 'skip' : {})
   const allPacks = useQuery(api.packs.listAll, isAdmin ? {} : 'skip')
   const packs = isAdmin ? allPacks : publishedPacks
@@ -76,15 +77,25 @@ export default function PackLibraryList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="relative w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)]">
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search packs..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 w-56"
+            className={cn('pl-8', search ? 'pr-8' : '')}
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <XIcon className="size-4" />
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

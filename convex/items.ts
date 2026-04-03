@@ -116,6 +116,24 @@ export const internalSeed = internalMutation({
   },
 })
 
+/** Internal: backfill the `source` field on all items that match seed data by name */
+export const backfillSources = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const sourceMap = new Map(SEED_ITEMS.map((s) => [s.name.toLowerCase(), s.source]))
+    const allItems = await ctx.db.query('items').take(500)
+    let updated = 0
+    for (const item of allItems) {
+      const source = sourceMap.get(item.name.toLowerCase())
+      if (source !== undefined && item.source !== source) {
+        await ctx.db.patch(item._id, { source })
+        updated++
+      }
+    }
+    return { updated }
+  },
+})
+
 /** Admin: trigger the seed (calls internal seedItems) */
 export const triggerSeed = mutation({
   args: {},

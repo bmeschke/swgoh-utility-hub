@@ -57,6 +57,7 @@ export default defineSchema({
     name: v.string(),
     category: v.optional(v.string()),
     crystalValue: v.number(),
+    source: v.optional(v.string()),
     isActive: v.boolean(),
   })
     .index('by_active', ['isActive'])
