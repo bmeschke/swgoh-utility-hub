@@ -64,7 +64,7 @@ export default function AscensionPackBuilder({ tiers, onChange }: AscensionPackB
   }
 
   function removeTier(tierIdx: number) {
-    if (tiers.length <= 4) return
+    if (tiers.length <= 3) return
     onChange(tiers.filter((_, i) => i !== tierIdx))
   }
 
@@ -76,7 +76,7 @@ export default function AscensionPackBuilder({ tiers, onChange }: AscensionPackB
           key={tierIdx}
           tier={tier}
           label={`Tier ${tierIdx + 1}`}
-          canRemove={tiers.length > 4}
+          canRemove={tiers.length > 3}
           onPriceChange={(v) => updateTierPrice(tierIdx, v)}
           onAddItem={(item) => addItem(tierIdx, item)}
           onUpdateQty={(itemIdx, qty) => updateQty(tierIdx, itemIdx, qty)}

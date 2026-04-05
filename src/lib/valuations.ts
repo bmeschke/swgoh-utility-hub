@@ -128,7 +128,6 @@ export const DEFAULT_ASCENSION_TIERS: AscensionTierDraft[] = [
   { price: '', items: [] },
   { price: '', items: [] },
   { price: '', items: [] },
-  { price: '', items: [] },
 ]
 
 export function calcAscensionTierCE(tier: AscensionTierDraft): number {
