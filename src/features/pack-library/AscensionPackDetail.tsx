@@ -114,6 +114,21 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
               {incPrice > 0 && (
                 <span className="text-sm text-muted-foreground">+${incPrice.toFixed(2)}</span>
               )}
+              {/* Tier-level valuation badges */}
+              {incPrice > 0 &&
+                tier.crystalEquivalent > 0 &&
+                (() => {
+                  const tierStdVal = calcDollarValue(tier.crystalEquivalent, 'regular')
+                  const tierHolVal = calcDollarValue(tier.crystalEquivalent, 'holiday')
+                  const tierStdPct = calcGainLossPercent(tierStdVal, incPrice)
+                  const tierHolPct = calcGainLossPercent(tierHolVal, incPrice)
+                  return (
+                    <span className="flex items-center gap-1">
+                      <GainBadge pct={tierStdPct} />
+                      <GainBadge pct={tierStdPct} displayPct={tierHolPct} />
+                    </span>
+                  )
+                })()}
               <span className="ml-auto text-xs">
                 {isIncluded ? (
                   <span className="text-primary font-medium">Included ✓</span>
@@ -136,19 +151,14 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
                   const itemCE = item.crystalValue * item.quantity
                   const itemStdVal = calcDollarValue(itemCE, 'regular')
                   const itemHolVal = calcDollarValue(itemCE, 'holiday')
-                  const itemStdPct = calcGainLossPercent(itemStdVal, incPrice)
-                  const itemHolPct = calcGainLossPercent(itemHolVal, incPrice)
 
                   return (
                     <div key={item.itemId} className="px-4 py-2.5">
                       {/* Row 1: name + standard value */}
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm font-medium">{item.name}</span>
-                        <span className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-xs text-muted-foreground">
-                            Standard: ${itemStdVal.toFixed(2)}
-                          </span>
-                          {incPrice > 0 && <GainBadge pct={itemStdPct} />}
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          Standard: ${itemStdVal.toFixed(2)}
                         </span>
                       </div>
                       {/* Row 2: CV formula + holiday value */}
@@ -157,14 +167,9 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
                           {item.crystalValue.toLocaleString()}✦ × {item.quantity.toLocaleString()} ={' '}
                           {itemCE.toLocaleString()}✦
                         </span>
-                        {incPrice > 0 && (
-                          <span className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-xs text-muted-foreground">
-                              Holiday: ${itemHolVal.toFixed(2)}
-                            </span>
-                            <GainBadge pct={itemStdPct} displayPct={itemHolPct} />
-                          </span>
-                        )}
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          Holiday: ${itemHolVal.toFixed(2)}
+                        </span>
                       </div>
                     </div>
                   )
