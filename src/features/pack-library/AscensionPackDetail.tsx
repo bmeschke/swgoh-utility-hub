@@ -76,15 +76,21 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
   // Tiers included in the purchase: 0..stoppingTierIdx
   const includedCount = stoppingTierIdx !== null ? stoppingTierIdx + 1 : 0
 
-  // Cumulative CE for selected tiers
+  // Cumulative CE and price for selected tiers
   const totalCE = tiers.slice(0, includedCount).reduce((s, t) => s + t.crystalEquivalent, 0)
-
   const totalPaid = stoppingTierIdx !== null ? ascensionCumulativePrice(tiers, stoppingTierIdx) : 0
-
   const standardValue = calcDollarValue(totalCE, 'regular')
   const holidayValue = calcDollarValue(totalCE, 'holiday')
   const regularPct = calcGainLossPercent(standardValue, totalPaid)
   const holidayPct = calcGainLossPercent(holidayValue, totalPaid)
+
+  // Grand total across all tiers
+  const allTiersCE = tiers.reduce((s, t) => s + t.crystalEquivalent, 0)
+  const allTiersPrice = tiers.length > 0 ? ascensionCumulativePrice(tiers, tiers.length - 1) : 0
+  const allTiersStdVal = calcDollarValue(allTiersCE, 'regular')
+  const allTiersHolVal = calcDollarValue(allTiersCE, 'holiday')
+  const allTiersStdPct = calcGainLossPercent(allTiersStdVal, allTiersPrice)
+  const allTiersHolPct = calcGainLossPercent(allTiersHolVal, allTiersPrice)
 
   if (tiers.length === 0) {
     return <p className="text-sm text-muted-foreground">No tier data available.</p>
@@ -97,6 +103,10 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
         const isIncluded = stoppingTierIdx !== null && tierIdx <= stoppingTierIdx
         const isDimmed = stoppingTierIdx !== null && tierIdx > stoppingTierIdx
         const incPrice = incrementalPrice(tiers, tierIdx)
+        const tierStdVal = calcDollarValue(tier.crystalEquivalent, 'regular')
+        const tierHolVal = calcDollarValue(tier.crystalEquivalent, 'holiday')
+        const tierStdPct = calcGainLossPercent(tierStdVal, incPrice)
+        const tierHolPct = calcGainLossPercent(tierHolVal, incPrice)
 
         return (
           <div
@@ -114,30 +124,11 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
               {incPrice > 0 && (
                 <span className="text-sm text-muted-foreground">+${incPrice.toFixed(2)}</span>
               )}
-              {/* Tier-level valuation badges */}
-              {incPrice > 0 &&
-                tier.crystalEquivalent > 0 &&
-                (() => {
-                  const tierStdVal = calcDollarValue(tier.crystalEquivalent, 'regular')
-                  const tierHolVal = calcDollarValue(tier.crystalEquivalent, 'holiday')
-                  const tierStdPct = calcGainLossPercent(tierStdVal, incPrice)
-                  const tierHolPct = calcGainLossPercent(tierHolVal, incPrice)
-                  return (
-                    <span className="flex items-center gap-1">
-                      <GainBadge pct={tierStdPct} />
-                      <GainBadge pct={tierStdPct} displayPct={tierHolPct} />
-                    </span>
-                  )
-                })()}
               <span className="ml-auto text-xs">
                 {isIncluded ? (
                   <span className="text-primary font-medium">Included ✓</span>
                 ) : (
-                  <span className="text-muted-foreground">
-                    {tier.crystalEquivalent > 0
-                      ? `${Math.round(tier.crystalEquivalent).toLocaleString()}✦`
-                      : 'Click to include'}
-                  </span>
+                  <span className="text-muted-foreground">Click to include</span>
                 )}
               </span>
             </div>
@@ -176,6 +167,37 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
                 })
               )}
             </div>
+
+            {/* Tier valuation — separated from items by border */}
+            {incPrice > 0 && tier.crystalEquivalent > 0 && (
+              <div className="px-4 py-3 space-y-2 text-sm border-t border-inherit">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tier price</span>
+                  <span className="font-medium">${incPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Content crystal value</span>
+                  <span className="font-medium">
+                    {Math.round(tier.crystalEquivalent).toLocaleString()}✦
+                  </span>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Expected standard price</span>
+                  <span className="flex items-center gap-2">
+                    ${tierStdVal.toFixed(2)}
+                    <GainBadge pct={tierStdPct} />
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Expected holiday price</span>
+                  <span className="flex items-center gap-2">
+                    ${tierHolVal.toFixed(2)}
+                    <GainBadge pct={tierStdPct} displayPct={tierHolPct} />
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         )
       })}
@@ -216,7 +238,7 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
         </CardContent>
       </Card>
 
-      {/* ── Valuation ── */}
+      {/* ── Valuation (selection total) ── */}
       {stoppingTierIdx !== null && totalCE > 0 && totalPaid > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -250,57 +272,36 @@ export default function AscensionPackDetail({ pack }: AscensionPackDetailProps) 
         </Card>
       )}
 
-      {/* ── Tier Breakdown ── */}
-      {tiers.some((t) => t.crystalEquivalent > 0) && (
+      {/* ── All Tiers Total ── */}
+      {allTiersCE > 0 && allTiersPrice > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Tier Breakdown</CardTitle>
+            <CardTitle className="text-sm font-semibold">All Tiers</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            {/* Per-tier breakdown — only when 2+ tiers */}
-            {tiers.length > 1 && (
-              <>
-                {tiers.map((tier, tierIdx) => {
-                  const tierCE = tier.crystalEquivalent
-                  if (tierCE <= 0) return null
-                  const incPrice = incrementalPrice(tiers, tierIdx)
-                  const tierStdVal = calcDollarValue(tierCE, 'regular')
-                  const tierHolVal = calcDollarValue(tierCE, 'holiday')
-                  const tierStdPct = calcGainLossPercent(tierStdVal, incPrice)
-                  const tierHolPct = calcGainLossPercent(tierHolVal, incPrice)
-                  return (
-                    <div key={tierIdx} className="space-y-3">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Tier {tierIdx + 1}
-                        {incPrice > 0 ? ` — $${incPrice.toFixed(2)}` : ''}
-                      </p>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Content crystal value</span>
-                        <span className="font-medium">{Math.round(tierCE).toLocaleString()}✦</span>
-                      </div>
-                      {incPrice > 0 && (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Regular pricing</span>
-                            <span className="flex items-center gap-2">
-                              ${tierStdVal.toFixed(2)}
-                              <GainBadge pct={tierStdPct} />
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Holiday pricing</span>
-                            <span className="flex items-center gap-2">
-                              ${tierHolVal.toFixed(2)}
-                              <GainBadge pct={tierStdPct} displayPct={tierHolPct} />
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )
-                })}
-              </>
-            )}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Pack price</span>
+              <span className="font-medium">${allTiersPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Content crystal value</span>
+              <span className="font-medium">{Math.round(allTiersCE).toLocaleString()}✦</span>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Expected standard price</span>
+              <span className="flex items-center gap-2">
+                ${allTiersStdVal.toFixed(2)}
+                <GainBadge pct={allTiersStdPct} />
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Expected holiday price</span>
+              <span className="flex items-center gap-2">
+                ${allTiersHolVal.toFixed(2)}
+                <GainBadge pct={allTiersStdPct} displayPct={allTiersHolPct} />
+              </span>
+            </div>
           </CardContent>
         </Card>
       )}
