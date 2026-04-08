@@ -8,13 +8,7 @@ import {
   type ShortABTier,
   type StandardABTier,
 } from '@/lib/income'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import SelectRow from '@/features/income/SelectRow'
 
 // Full list of assault battles
 const ASSAULT_BATTLES = [
@@ -35,10 +29,6 @@ interface Props {
 }
 
 export default function AssaultBattlesSection({ inputs, onChange }: Props) {
-  const handleChange = (battle: string, tier: string) => {
-    onChange({ ...inputs, [battle]: tier as StandardABTier | ShortABTier })
-  }
-
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
@@ -52,27 +42,20 @@ export default function AssaultBattlesSection({ inputs, onChange }: Props) {
           const value = (inputs[battle] as string) ?? 'none'
 
           return (
-            <div
+            <SelectRow
               key={battle}
-              className="flex items-center justify-between gap-3 rounded border p-2"
-            >
-              <span className="text-sm font-medium">
-                {battle}
-                <span className="ml-1.5 text-xs text-muted-foreground">1×/mo</span>
-              </span>
-              <Select value={value} onValueChange={(v) => v && handleChange(battle, v)}>
-                <SelectTrigger className="w-44 h-8 text-xs">
-                  <SelectValue>{labels[value as ShortABTier & StandardABTier]}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {tiers.map((tier) => (
-                    <SelectItem key={tier} value={tier} className="text-xs">
-                      {labels[tier as ShortABTier & StandardABTier]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              label={battle}
+              sublabel="1×/mo"
+              value={value}
+              displayValue={labels[value as ShortABTier & StandardABTier]}
+              onValueChange={(v) =>
+                onChange({ ...inputs, [battle]: v as StandardABTier | ShortABTier })
+              }
+              options={tiers.map((t) => ({
+                value: t,
+                label: labels[t as ShortABTier & StandardABTier],
+              }))}
+            />
           )
         })}
       </div>

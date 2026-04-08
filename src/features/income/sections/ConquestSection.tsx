@@ -4,13 +4,13 @@ import {
   CONQUEST_HARD_CRATE_LABELS,
   type ConquestInputs,
 } from '@/lib/income'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import SelectRow from '@/features/income/SelectRow'
+
+const MODE_OPTIONS = [
+  { value: 'Easy', label: 'Easy' },
+  { value: 'Normal', label: 'Normal' },
+  { value: 'Hard', label: 'Hard' },
+]
 
 interface Props {
   inputs: ConquestInputs
@@ -24,7 +24,10 @@ export default function ConquestSection({ inputs, onChange }: Props) {
       : inputs.mode === 'Normal'
         ? CONQUEST_NORMAL_CRATE_LABELS
         : CONQUEST_EASY_CRATE_LABELS
-  const crateTiers = Object.keys(crateLabels).map(Number)
+  const crateOptions = Object.keys(crateLabels).map((k) => ({
+    value: k,
+    label: crateLabels[Number(k)],
+  }))
 
   return (
     <div className="space-y-3">
@@ -33,49 +36,18 @@ export default function ConquestSection({ inputs, onChange }: Props) {
         pending — totals will update once added.
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="flex items-center justify-between gap-3 rounded border p-2">
-          <span className="text-sm font-medium">Mode</span>
-          <Select
-            value={inputs.mode}
-            onValueChange={(v) =>
-              v && onChange({ mode: v as 'Easy' | 'Normal' | 'Hard', crateTier: 1 })
-            }
-          >
-            <SelectTrigger className="w-44 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Easy" className="text-xs">
-                Easy
-              </SelectItem>
-              <SelectItem value="Normal" className="text-xs">
-                Normal
-              </SelectItem>
-              <SelectItem value="Hard" className="text-xs">
-                Hard
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center justify-between gap-3 rounded border p-2">
-          <span className="text-sm font-medium">Crate Tier</span>
-          <Select
-            value={String(inputs.crateTier)}
-            onValueChange={(v) => v && onChange({ ...inputs, crateTier: Number(v) })}
-          >
-            <SelectTrigger className="w-44 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {crateTiers.map((tier) => (
-                <SelectItem key={tier} value={String(tier)} className="text-xs">
-                  {crateLabels[tier]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SelectRow
+          label="Mode"
+          value={inputs.mode}
+          onValueChange={(v) => onChange({ mode: v as 'Easy' | 'Normal' | 'Hard', crateTier: 1 })}
+          options={MODE_OPTIONS}
+        />
+        <SelectRow
+          label="Crate Tier"
+          value={String(inputs.crateTier)}
+          onValueChange={(v) => onChange({ ...inputs, crateTier: Number(v) })}
+          options={crateOptions}
+        />
       </div>
     </div>
   )

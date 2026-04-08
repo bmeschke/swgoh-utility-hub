@@ -1,11 +1,5 @@
 import { FLEET_ARENA_RANK_LABELS, type FleetArenaRank, type FleetArenaInputs } from '@/lib/income'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import SelectRow from '@/features/income/SelectRow'
 
 const RANKS: FleetArenaRank[] = [
   '1',
@@ -34,24 +28,13 @@ export default function FleetArenaSection({ inputs, onChange }: Props) {
         Select your typical daily rank at payout time.
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="flex items-center justify-between gap-3 rounded border p-2">
-          <span className="text-sm font-medium">Daily Rank</span>
-          <Select
-            value={inputs.rank}
-            onValueChange={(v) => v && onChange({ rank: v as FleetArenaRank })}
-          >
-            <SelectTrigger className="w-44 h-8 text-xs">
-              <SelectValue>{FLEET_ARENA_RANK_LABELS[inputs.rank]}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {RANKS.map((rank) => (
-                <SelectItem key={rank} value={rank} className="text-xs">
-                  {FLEET_ARENA_RANK_LABELS[rank]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SelectRow
+          label="Daily Rank"
+          value={inputs.rank}
+          displayValue={FLEET_ARENA_RANK_LABELS[inputs.rank]}
+          onValueChange={(v) => onChange({ rank: v as FleetArenaRank })}
+          options={RANKS.map((r) => ({ value: r, label: FLEET_ARENA_RANK_LABELS[r] }))}
+        />
       </div>
     </div>
   )

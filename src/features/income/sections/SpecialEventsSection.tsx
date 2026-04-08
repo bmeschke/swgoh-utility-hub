@@ -9,13 +9,7 @@ import {
   type CovenTier,
   type SpecialEventsInputs,
 } from '@/lib/income'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import SelectRow from '@/features/income/SelectRow'
 
 type EventTierOption = { value: string; label: string }
 
@@ -60,35 +54,19 @@ export default function SpecialEventsSection({ inputs, onChange }: Props) {
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {EVENTS.map(({ key, label, frequency, options }) => (
-        <div key={key} className="flex items-center justify-between gap-3 rounded border p-2">
-          <div className="min-w-0">
-            <span className="text-sm font-medium">{label}</span>
-            <span className="ml-1.5 text-xs text-muted-foreground">{frequency}</span>
-          </div>
-          <Select
-            value={inputs[key] as string}
-            onValueChange={(v) => {
-              if (!v) return
-              if (key === 'smugglersRun1') onChange({ ...inputs, smugglersRun1: v as SRITier })
-              else if (key === 'smugglersRun2')
-                onChange({ ...inputs, smugglersRun2: v as SRIITier })
-              else if (key === 'smugglersRun3')
-                onChange({ ...inputs, smugglersRun3: v as SRIIITier })
-              else onChange({ ...inputs, covenOfShadows: v as CovenTier })
-            }}
-          >
-            <SelectTrigger className="w-44 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map(({ value, label: tierLabel }) => (
-                <SelectItem key={value} value={value} className="text-xs">
-                  {tierLabel}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SelectRow
+          key={key}
+          label={label}
+          sublabel={frequency}
+          value={inputs[key] as string}
+          onValueChange={(v) => {
+            if (key === 'smugglersRun1') onChange({ ...inputs, smugglersRun1: v as SRITier })
+            else if (key === 'smugglersRun2') onChange({ ...inputs, smugglersRun2: v as SRIITier })
+            else if (key === 'smugglersRun3') onChange({ ...inputs, smugglersRun3: v as SRIIITier })
+            else onChange({ ...inputs, covenOfShadows: v as CovenTier })
+          }}
+          options={options}
+        />
       ))}
     </div>
   )

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useUser } from '@clerk/clerk-react'
 import { useQuery, useMutation } from 'convex/react'
-import { InfoIcon } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import {
   sumIncome,
@@ -30,27 +29,12 @@ import {
   type SpecialEventsInputs,
   type PassesInputs,
 } from '@/lib/income'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
 import IncomeTabBar, { type IncomeTab } from '@/features/income/IncomeTabBar'
 import IncomeTotals from '@/features/income/IncomeTotals'
-import AssaultBattlesSection from '@/features/income/sections/AssaultBattlesSection'
-import SpecialEventsSection from '@/features/income/sections/SpecialEventsSection'
-import ConquestSection from '@/features/income/sections/ConquestSection'
-import PassesSection from '@/features/income/sections/PassesSection'
-import GrandArenaSection from '@/features/income/sections/GrandArenaSection'
-import FleetArenaSection from '@/features/income/sections/FleetArenaSection'
-import TerritoryWarSection from '@/features/income/sections/TerritoryWarSection'
-import RaidRewardsSection from '@/features/income/sections/RaidRewardsSection'
-import TerritoryBattlesSection from '@/features/income/sections/TerritoryBattlesSection'
+import IncomeAssumptionsModal from '@/features/income/IncomeAssumptionsModal'
+import SoloEventsTab from '@/features/income/tabs/SoloEventsTab'
+import PvPTab from '@/features/income/tabs/PvPTab'
+import GuildEventsTab from '@/features/income/tabs/GuildEventsTab'
 
 // ─── Default inputs ───────────────────────────────────────────────────────────
 
@@ -70,80 +54,6 @@ const DEFAULT_SPECIAL_EVENTS: SpecialEventsInputs = {
   covenOfShadows: 'none',
 }
 const DEFAULT_PASSES: PassesInputs = { episodePass: false, conquestPass: false }
-
-// ─── Assumptions Modal ────────────────────────────────────────────────────────
-
-function AssumptionsModal() {
-  return (
-    <Dialog>
-      <DialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-muted-foreground hover:text-foreground"
-          />
-        }
-      >
-        <InfoIcon className="size-4" />
-        Assumptions
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Income Assumptions</DialogTitle>
-          <DialogDescription>
-            Some inputs are fixed to keep the calculator simple. Here's what's assumed for all
-            players regardless of your selections.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 text-sm">
-          <Separator />
-          <ul className="space-y-2 text-muted-foreground">
-            <li>
-              <span className="font-medium text-foreground">Daily Activities</span> — completed
-              every day (+70 crystals/day, +1 Omega/day); includes +25 crystals/day from Galactic
-              War
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Daily login</span> — login reward
-              claimed every day
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Grand Arena</span> — 5 wins + 4 losses
-              per season, always finishing 2nd–4th place
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Territory Wars</span> — 1 win + 1 loss
-              per month (2 events total)
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Raids</span> — 4 raids per month
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Territory Battles</span> — Prize Box
-              rewards are not included; the drop odds for Prize Box contents are unknown
-            </li>
-            <li>
-              <span className="font-medium text-foreground">Episode Track</span> — track is fully
-              completed (level 50) regardless of whether the Episode Pass is purchased
-            </li>
-          </ul>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-
-function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-3">
-      <h3 className="text-base font-semibold">{heading}</h3>
-      {children}
-    </div>
-  )
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -180,7 +90,7 @@ export default function IncomeBetaPage() {
     : localSpecialEvents
   const passesInputs = isSignedIn ? (profile?.passes ?? DEFAULT_PASSES) : localPasses
 
-  // Save helpers
+  // Save helper — persists to Convex when signed in, else updates local state
   function save<T>(field: string, value: T, localSetter: (v: T) => void) {
     if (isSignedIn) {
       upsert({ [field]: value } as Parameters<typeof upsert>[0])
@@ -231,7 +141,7 @@ export default function IncomeBetaPage() {
           <h1 className="text-2xl font-bold">Income Calculator</h1>
           <span className="text-sm text-muted-foreground">beta</span>
         </div>
-        <AssumptionsModal />
+        <IncomeAssumptionsModal />
       </div>
 
       {!isSignedIn && (
@@ -244,78 +154,36 @@ export default function IncomeBetaPage() {
 
       <div className="space-y-8">
         {activeTab === 'soloEvents' && (
-          <>
-            <Section heading="Assault Battles">
-              <AssaultBattlesSection
-                inputs={assaultInputs}
-                onChange={(v) => save('assaultBattles', v, setLocalAssaultInputs)}
-              />
-            </Section>
-            <Separator />
-            <Section heading="Special Events">
-              <SpecialEventsSection
-                inputs={specialEventsInputs}
-                onChange={(v) => save('specialEvents', v, setLocalSpecialEvents)}
-              />
-            </Section>
-            <Separator />
-            <Section heading="Conquest">
-              <ConquestSection
-                inputs={conquestInputs}
-                onChange={(v) => save('conquest', v, setLocalConquest)}
-              />
-            </Section>
-            <Separator />
-            <Section heading="Passes">
-              <PassesSection
-                inputs={passesInputs}
-                onChange={(v) => save('passes', v, setLocalPasses)}
-              />
-            </Section>
-          </>
+          <SoloEventsTab
+            assaultInputs={assaultInputs}
+            specialEventsInputs={specialEventsInputs}
+            conquestInputs={conquestInputs}
+            passesInputs={passesInputs}
+            onAssaultChange={(v) => save('assaultBattles', v, setLocalAssaultInputs)}
+            onSpecialEventsChange={(v) => save('specialEvents', v, setLocalSpecialEvents)}
+            onConquestChange={(v) => save('conquest', v, setLocalConquest)}
+            onPassesChange={(v) => save('passes', v, setLocalPasses)}
+          />
         )}
 
         {activeTab === 'pvp' && (
-          <>
-            <Section heading="Grand Arena">
-              <GrandArenaSection
-                inputs={grandArena}
-                onChange={(v) => save('grandArena', v, setLocalGrandArena)}
-              />
-            </Section>
-            <Separator />
-            <Section heading="Fleet Arena">
-              <FleetArenaSection
-                inputs={fleetArena}
-                onChange={(v) => save('fleetArena', v, setLocalFleetArena)}
-              />
-            </Section>
-            <Separator />
-            <Section heading="Territory Wars">
-              <TerritoryWarSection
-                inputs={twInputs}
-                onChange={(v) => save('territoryWar', v, setLocalTW)}
-              />
-            </Section>
-          </>
+          <PvPTab
+            grandArena={grandArena}
+            fleetArena={fleetArena}
+            twInputs={twInputs}
+            onGrandArenaChange={(v) => save('grandArena', v, setLocalGrandArena)}
+            onFleetArenaChange={(v) => save('fleetArena', v, setLocalFleetArena)}
+            onTWChange={(v) => save('territoryWar', v, setLocalTW)}
+          />
         )}
 
         {activeTab === 'guildEvents' && (
-          <>
-            <Section heading="Raids">
-              <RaidRewardsSection
-                inputs={raidInputs}
-                onChange={(v) => save('raidRewards', v, setLocalRaid)}
-              />
-            </Section>
-            <Separator />
-            <Section heading="Territory Battles">
-              <TerritoryBattlesSection
-                inputs={tbInputs}
-                onChange={(v) => save('territoryBattles', v, setLocalTB)}
-              />
-            </Section>
-          </>
+          <GuildEventsTab
+            raidInputs={raidInputs}
+            tbInputs={tbInputs}
+            onRaidChange={(v) => save('raidRewards', v, setLocalRaid)}
+            onTBChange={(v) => save('territoryBattles', v, setLocalTB)}
+          />
         )}
       </div>
 
