@@ -1,22 +1,11 @@
 import { cn } from '@/lib/utils'
 
-export type IncomeTab =
-  | 'grandArena'
-  | 'assaultBattles'
-  | 'territoryBattles'
-  | 'raidRewards'
-  | 'territoryWar'
-  | 'conquest'
-  | 'specialEvents'
+export type IncomeTab = 'soloEvents' | 'pvp' | 'guildEvents'
 
 const TABS: { id: IncomeTab; label: string }[] = [
-  { id: 'grandArena', label: 'Grand Arena' },
-  { id: 'assaultBattles', label: 'Assault Battles' },
-  { id: 'territoryBattles', label: 'Territory Battles' },
-  { id: 'raidRewards', label: 'Raid Rewards' },
-  { id: 'territoryWar', label: 'Territory War' },
-  { id: 'conquest', label: 'Conquest' },
-  { id: 'specialEvents', label: 'Special Events' },
+  { id: 'soloEvents', label: 'Solo Events' },
+  { id: 'pvp', label: 'PvP' },
+  { id: 'guildEvents', label: 'Guild Events' },
 ]
 
 interface Props {

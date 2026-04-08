@@ -52,11 +52,17 @@ export default function AssaultBattlesSection({ inputs, onChange }: Props) {
           const value = (inputs[battle] as string) ?? 'none'
 
           return (
-            <div key={battle} className="flex items-center justify-between gap-3 rounded border p-2">
-              <span className="text-sm font-medium">{battle}</span>
+            <div
+              key={battle}
+              className="flex items-center justify-between gap-3 rounded border p-2"
+            >
+              <span className="text-sm font-medium">
+                {battle}
+                <span className="ml-1.5 text-xs text-muted-foreground">1×/mo</span>
+              </span>
               <Select value={value} onValueChange={(v) => v && handleChange(battle, v)}>
                 <SelectTrigger className="w-44 h-8 text-xs">
-                  <SelectValue />
+                  <SelectValue>{labels[value as ShortABTier & StandardABTier]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {tiers.map((tier) => (

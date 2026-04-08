@@ -4,6 +4,10 @@ import {
   SHORT_TIER_BATTLES,
   sumIncome,
   computeAssaultBattleIncome,
+  computeGrandArenaIncome,
+  computeFleetArenaIncome,
+  computeFixedDailyIncome,
+  computeTerritoryWarIncome,
   type IncomeResult,
 } from './income'
 
@@ -136,8 +140,111 @@ describe('computeAssaultBattleIncome', () => {
   })
 
   it('does not throw for unknown battle names', () => {
-    expect(() =>
-      computeAssaultBattleIncome({ 'Unknown Battle': 'I' })
-    ).not.toThrow()
+    expect(() => computeAssaultBattleIncome({ 'Unknown Battle': 'I' })).not.toThrow()
+  })
+})
+
+// ─── computeGrandArenaIncome ──────────────────────────────────────────────────
+
+describe('computeGrandArenaIncome', () => {
+  it('Kyber Div 1 gives highest crystals', () => {
+    const result = computeGrandArenaIncome({ league: 'Kyber', division: 1 })
+    // Daily: 260×30=7,800 + wins: 5×900=4,500 + events: 4×500=2,000 = 14,300
+    expect(result.crystals).toBe(260 * 30 + 5 * 900 + 4 * 500)
+  })
+
+  it('Kyber Div 1 championship tokens = 5×125 + 4×1600 = 7,025', () => {
+    const result = computeGrandArenaIncome({ league: 'Kyber', division: 1 })
+    expect(result.championshipTokens).toBe(5 * 125 + 4 * 1600)
+  })
+
+  it('Carbonite Div 5 gives lowest crystals', () => {
+    const kyber = computeGrandArenaIncome({ league: 'Kyber', division: 1 })
+    const carbonite = computeGrandArenaIncome({ league: 'Carbonite', division: 5 })
+    expect(carbonite.crystals).toBeLessThan(kyber.crystals)
+  })
+
+  it('daily portion scales correctly — Aurodium Div 3 = 150×30 + bonus', () => {
+    const result = computeGrandArenaIncome({ league: 'Aurodium', division: 3 })
+    expect(result.crystals).toBe(150 * 30 + 5 * 900 + 4 * 500)
+  })
+
+  it('returns zero for all non-crystal/token fields', () => {
+    const result = computeGrandArenaIncome({ league: 'Kyber', division: 1 })
+    expect(result.getMk1).toBe(0)
+    expect(result.getMk2).toBe(0)
+    expect(result.omega).toBe(0)
+  })
+})
+
+// ─── computeFleetArenaIncome ──────────────────────────────────────────────────
+
+describe('computeFleetArenaIncome', () => {
+  it('rank 1 gives 400×30=12,000 crystals/month', () => {
+    const result = computeFleetArenaIncome({ rank: '1' })
+    expect(result.crystals).toBe(400 * 30)
+  })
+
+  it('rank 1 gives 1,800×30=54,000 fleet tokens/month', () => {
+    const result = computeFleetArenaIncome({ rank: '1' })
+    expect(result.fleetArenaTokens).toBe(1800 * 30)
+  })
+
+  it('rank 1 gives 200,000×30 ship building materials/month', () => {
+    const result = computeFleetArenaIncome({ rank: '1' })
+    expect(result.shipBuildingMaterials).toBe(200000 * 30)
+  })
+
+  it('rank 51-100 gives 0 crystals', () => {
+    const result = computeFleetArenaIncome({ rank: '51-100' })
+    expect(result.crystals).toBe(0)
+  })
+
+  it('rank 501+ gives 800×30=24,000 fleet tokens/month', () => {
+    const result = computeFleetArenaIncome({ rank: '501+' })
+    expect(result.fleetArenaTokens).toBe(800 * 30)
+  })
+
+  it('lower ranks give fewer resources than higher ranks', () => {
+    const top = computeFleetArenaIncome({ rank: '1' })
+    const bottom = computeFleetArenaIncome({ rank: '501+' })
+    expect(top.crystals).toBeGreaterThan(bottom.crystals)
+    expect(top.fleetArenaTokens).toBeGreaterThan(bottom.fleetArenaTokens)
+  })
+})
+
+// ─── computeFixedDailyIncome ──────────────────────────────────────────────────
+
+describe('computeFixedDailyIncome', () => {
+  it('returns 1,950 crystals/month (65/day × 30)', () => {
+    expect(computeFixedDailyIncome().crystals).toBe(65 * 30)
+  })
+
+  it('returns 30 omega/month (1/day × 30)', () => {
+    expect(computeFixedDailyIncome().omega).toBe(30)
+  })
+
+  it('returns zero for all other fields', () => {
+    const result = computeFixedDailyIncome()
+    expect(result.getMk1).toBe(0)
+    expect(result.getMk2).toBe(0)
+    expect(result.zeta).toBe(0)
+    expect(result.raidMk1).toBe(0)
+  })
+})
+
+// ─── computeTerritoryWarIncome ────────────────────────────────────────────────
+
+describe('computeTerritoryWarIncome', () => {
+  it('380M+ bracket returns sum of 1 win + 1 loss', () => {
+    const result = computeTerritoryWarIncome({ guildGP: '380M+' })
+    expect(result.getMk1).toBe(500 + 425) // 925
+    expect(result.getMk2).toBe(650 + 550) // 1,200
+  })
+
+  it('returns zero non-GET fields', () => {
+    const result = computeTerritoryWarIncome({ guildGP: '380M+' })
+    expect(result.crystals).toBe(0)
+    expect(result.getMk3).toBe(0)
   })
 })
