@@ -132,10 +132,14 @@ const conquestValidator = v.object({
 })
 
 const specialEventsValidator = v.object({
-  smugglersRun1: v.string(),
-  smugglersRun2: v.string(),
-  smugglersRun3: v.string(),
-  covenOfShadows: v.string(),
+  smugglersRun1: v.union(v.literal('none'), v.literal('Tough'), v.literal('Deadly')),
+  smugglersRun2: v.union(v.literal('none'), v.literal('Very Deadly')),
+  smugglersRun3: v.union(
+    v.literal('none'),
+    v.literal('Very Deadly'),
+    v.literal('Extremely Deadly')
+  ),
+  covenOfShadows: v.union(v.literal('none'), v.literal('Tier II'), v.literal('Tier III')),
 })
 
 const passesValidator = v.object({

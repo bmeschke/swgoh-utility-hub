@@ -216,8 +216,8 @@ describe('computeFleetArenaIncome', () => {
 // ─── computeFixedDailyIncome ──────────────────────────────────────────────────
 
 describe('computeFixedDailyIncome', () => {
-  it('returns 1,950 crystals/month (65/day × 30)', () => {
-    expect(computeFixedDailyIncome().crystals).toBe(65 * 30)
+  it('returns 2,850 crystals/month (70 daily activities + 25 GW = 95/day × 30)', () => {
+    expect(computeFixedDailyIncome().crystals).toBe(95 * 30)
   })
 
   it('returns 30 omega/month (1/day × 30)', () => {

@@ -5,7 +5,7 @@ import { InfoIcon } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import {
   sumIncome,
-  computeAssaultBattleIncome,
+  computeSingleAssaultBattleIncome,
   computeGrandArenaIncome,
   computeFleetArenaIncome,
   computeTerritoryWarIncome,
@@ -13,7 +13,10 @@ import {
   computeRaidPersonalIncome,
   computeTerritoryBattleIncome,
   computeConquestIncome,
-  computeSpecialEventsIncome,
+  computeSmugglersRun1Income,
+  computeSmugglersRun2Income,
+  computeSmugglersRun3Income,
+  computeCovenOfShadowsIncome,
   computePassesIncome,
   computeDailyActivitiesIncome,
   computeGalacticWarIncome,
@@ -190,8 +193,26 @@ export default function IncomeBetaPage() {
   const breakdown = [
     { label: 'Daily Activities', result: computeDailyActivitiesIncome() },
     { label: 'Galactic War', result: computeGalacticWarIncome() },
-    { label: 'Assault Battles', result: computeAssaultBattleIncome(assaultInputs) },
-    { label: 'Special Events', result: computeSpecialEventsIncome(specialEventsInputs) },
+    ...Object.entries(assaultInputs).map(([name, tier]) => ({
+      label: name,
+      result: computeSingleAssaultBattleIncome(name, tier),
+    })),
+    {
+      label: "Smuggler's Run I",
+      result: computeSmugglersRun1Income(specialEventsInputs.smugglersRun1),
+    },
+    {
+      label: "Smuggler's Run II",
+      result: computeSmugglersRun2Income(specialEventsInputs.smugglersRun2),
+    },
+    {
+      label: "Smuggler's Run III",
+      result: computeSmugglersRun3Income(specialEventsInputs.smugglersRun3),
+    },
+    {
+      label: 'Coven of Shadows',
+      result: computeCovenOfShadowsIncome(specialEventsInputs.covenOfShadows),
+    },
     { label: 'Conquest', result: computeConquestIncome(conquestInputs) },
     { label: 'Passes', result: computePassesIncome(passesInputs) },
     { label: 'Grand Arena', result: computeGrandArenaIncome(grandArena) },

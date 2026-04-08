@@ -65,6 +65,8 @@ const MOD_ROWS: { key: keyof IncomeResult; label: string }[] = [
   { key: 'mk1Amplifier', label: 'Mk 1 Amplifier' },
   { key: 'mk2PulseModulator', label: 'Mk 2 Pulse Modulator' },
   { key: 'mk2CircuitBreaker', label: 'Mk 2 Circuit Breaker Module' },
+  { key: 'mk1BondingPin', label: 'Mk 1 Bonding Pin' },
+  { key: 'microAttenuators', label: 'Micro Attenuators' },
 ]
 
 // ─── Breakdown tooltip content ─────────────────────────────────────────────

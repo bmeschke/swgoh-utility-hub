@@ -46,6 +46,8 @@ export interface IncomeResult {
   mk1Amplifier: number
   mk2PulseModulator: number
   mk2CircuitBreaker: number
+  mk1BondingPin: number
+  microAttenuators: number
 }
 
 export const ZERO_INCOME: IncomeResult = {
@@ -87,6 +89,8 @@ export const ZERO_INCOME: IncomeResult = {
   mk1Amplifier: 0,
   mk2PulseModulator: 0,
   mk2CircuitBreaker: 0,
+  mk1BondingPin: 0,
+  microAttenuators: 0,
 }
 
 // ─── Assault Battles ──────────────────────────────────────────────────────────
@@ -262,15 +266,20 @@ export interface AssaultBattleInputs {
   [battleName: string]: StandardABTier | ShortABTier
 }
 
+export function computeSingleAssaultBattleIncome(
+  battleName: string,
+  tier: StandardABTier | ShortABTier
+): IncomeResult {
+  const payouts = BATTLE_PAYOUTS[battleName]
+  if (!payouts) return { ...ZERO_INCOME }
+  const tiers = SHORT_TIER_BATTLES.includes(battleName) ? SHORT_AB_TIERS : STANDARD_AB_TIERS
+  return accumulateTiers(tier, tiers, payouts)
+}
+
 export function computeAssaultBattleIncome(inputs: AssaultBattleInputs): IncomeResult {
-  const results: IncomeResult[] = []
-  for (const [battle, tier] of Object.entries(inputs)) {
-    const payouts = BATTLE_PAYOUTS[battle]
-    if (!payouts) continue
-    const tiers = SHORT_TIER_BATTLES.includes(battle) ? SHORT_AB_TIERS : STANDARD_AB_TIERS
-    results.push(accumulateTiers(tier, tiers, payouts))
-  }
-  return sumIncome(...results)
+  return sumIncome(
+    ...Object.entries(inputs).map(([name, tier]) => computeSingleAssaultBattleIncome(name, tier))
+  )
 }
 
 // ─── Grand Arena Championships ────────────────────────────────────────────────
@@ -950,28 +959,152 @@ export function computeConquestIncome(inputs: ConquestInputs): IncomeResult {
 // ─── Special Events ───────────────────────────────────────────────────────────
 
 // Recurring named events (not Assault Battles):
-// - Smuggler's Run I, II, III: 2x per month each
-// - Coven of Shadows: 1x per month
-// TODO: Fill in tier labels and per-tier reward amounts (user to provide)
+// - Smuggler's Run I: shared tiers (pick one), 2x per month
+// - Smuggler's Run II: single tier, 2x per month
+// - Smuggler's Run III: cumulative tiers, 2x per month
+// - Coven of Shadows: cumulative tiers, 1x per month
 
-export type SpecialEventTier = 'none' | string // specific tier names TBD
+export type SRITier = 'none' | 'Tough' | 'Deadly'
+export type SRIITier = 'none' | 'Very Deadly'
+export type SRIIITier = 'none' | 'Very Deadly' | 'Extremely Deadly'
+export type CovenTier = 'none' | 'Tier II' | 'Tier III'
 
 export interface SpecialEventsInputs {
-  smugglersRun1: SpecialEventTier
-  smugglersRun2: SpecialEventTier
-  smugglersRun3: SpecialEventTier
-  covenOfShadows: SpecialEventTier
+  smugglersRun1: SRITier
+  smugglersRun2: SRIITier
+  smugglersRun3: SRIIITier
+  covenOfShadows: CovenTier
 }
 
-// TODO: Replace with real tier options once user provides reward data
-export const SPECIAL_EVENT_TIER_OPTIONS: { value: SpecialEventTier; label: string }[] = [
+export const SR1_TIER_OPTIONS: { value: SRITier; label: string }[] = [
   { value: 'none', label: 'Not completed' },
+  { value: 'Tough', label: 'Tough' },
+  { value: 'Deadly', label: 'Deadly' },
 ]
 
-// TODO: Implement with real payout data once user provides it
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const SR2_TIER_OPTIONS: { value: SRIITier; label: string }[] = [
+  { value: 'none', label: 'Not completed' },
+  { value: 'Very Deadly', label: 'Very Deadly' },
+]
+
+export const SR3_TIER_OPTIONS: { value: SRIIITier; label: string }[] = [
+  { value: 'none', label: 'Not completed' },
+  { value: 'Very Deadly', label: 'Very Deadly' },
+  { value: 'Extremely Deadly', label: 'Extremely Deadly' },
+]
+
+export const COVEN_TIER_OPTIONS: { value: CovenTier; label: string }[] = [
+  { value: 'none', label: 'Not completed' },
+  { value: 'Tier II', label: 'Tier II' },
+  { value: 'Tier III', label: 'Tier III' },
+]
+
+// SR I: Tough and Deadly are mutually exclusive (shared event). 2×/month.
+const SR1_PAYOUTS: Record<SRITier, Partial<IncomeResult>> = {
+  none: {},
+  Tough: { mk1FusionDisk: 6, mk1FusionCoil: 6, mk1PowerFlowControlChip: 6, mk1BondingPin: 6 },
+  Deadly: {
+    mk1FusionDisk: 8,
+    mk1FusionCoil: 8,
+    mk1PowerFlowControlChip: 8,
+    mk1Capacitor: 8,
+    mk1Amplifier: 8,
+    mk2PulseModulator: 4,
+    mk1BondingPin: 8,
+  },
+}
+
+export function computeSmugglersRun1Income(tier: SRITier): IncomeResult {
+  if (tier === 'none') return { ...ZERO_INCOME }
+  const payout = SR1_PAYOUTS[tier]
+  const result = { ...ZERO_INCOME }
+  for (const [key, value] of Object.entries(payout)) {
+    ;(result as Record<string, number>)[key] = (value ?? 0) * 2 // 2×/month
+  }
+  return result
+}
+
+// SR II: single tier, 2×/month.
+const SR2_PAYOUTS: Record<SRIITier, Partial<IncomeResult>> = {
+  none: {},
+  'Very Deadly': {
+    mk1Capacitor: 76,
+    mk1Amplifier: 76,
+    mk2PulseModulator: 30,
+    mk2CircuitBreaker: 30,
+    microAttenuators: 46,
+  },
+}
+
+export function computeSmugglersRun2Income(tier: SRIITier): IncomeResult {
+  if (tier === 'none') return { ...ZERO_INCOME }
+  const payout = SR2_PAYOUTS[tier]
+  const result = { ...ZERO_INCOME }
+  for (const [key, value] of Object.entries(payout)) {
+    ;(result as Record<string, number>)[key] = (value ?? 0) * 2 // 2×/month
+  }
+  return result
+}
+
+// SR III: cumulative tiers, 2×/month.
+const SR3_ORDERED: SRIIITier[] = ['none', 'Very Deadly', 'Extremely Deadly']
+const SR3_PAYOUTS: Partial<Record<SRIIITier, Partial<IncomeResult>>> = {
+  'Very Deadly': {
+    mk1Capacitor: 76,
+    mk1Amplifier: 76,
+    mk2PulseModulator: 30,
+    mk2CircuitBreaker: 30,
+    microAttenuators: 46,
+  },
+  'Extremely Deadly': {
+    mk1FusionCoil: 16,
+    mk1PowerFlowControlChip: 16,
+    mk1Capacitor: 84,
+    mk1Amplifier: 84,
+    mk2PulseModulator: 40,
+    mk2CircuitBreaker: 40,
+    microAttenuators: 46,
+  },
+}
+
+export function computeSmugglersRun3Income(tier: SRIIITier): IncomeResult {
+  const perEvent = accumulateTiers(tier, SR3_ORDERED, SR3_PAYOUTS)
+  // 2×/month
+  const result = { ...ZERO_INCOME }
+  for (const key of Object.keys(ZERO_INCOME) as (keyof IncomeResult)[]) {
+    result[key] = perEvent[key] * 2
+  }
+  return result
+}
+
+// Coven of Shadows: cumulative tiers, 1×/month.
+const COVEN_ORDERED: CovenTier[] = ['none', 'Tier II', 'Tier III']
+const COVEN_PAYOUTS: Partial<Record<CovenTier, Partial<IncomeResult>>> = {
+  'Tier II': { kyrotechBattleComputer: 15, kyrotechShockProd: 15 },
+  'Tier III': {
+    greySignalData: 8.33,
+    greenSignalData: 6.66,
+    blueSignalData: 5,
+    zinbiddleCard: 3.33,
+    impulseDetector: 3.33,
+    aeromagnifier: 3.33,
+    gyrdaKeypad: 2.5,
+    droidBrain: 2.5,
+  },
+}
+
+export function computeCovenOfShadowsIncome(tier: CovenTier): IncomeResult {
+  return accumulateTiers(tier, COVEN_ORDERED, COVEN_PAYOUTS) // 1×/month
+}
+
+/** Convenience: sum of all special event income sources. */
 export function computeSpecialEventsIncome(inputs: SpecialEventsInputs): IncomeResult {
-  return { ...ZERO_INCOME }
+  return sumIncome(
+    computeSmugglersRun1Income(inputs.smugglersRun1),
+    computeSmugglersRun2Income(inputs.smugglersRun2),
+    computeSmugglersRun3Income(inputs.smugglersRun3),
+    computeCovenOfShadowsIncome(inputs.covenOfShadows)
+  )
 }
 
 // ─── Passes ───────────────────────────────────────────────────────────────────
