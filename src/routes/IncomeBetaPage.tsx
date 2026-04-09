@@ -38,7 +38,11 @@ import GuildEventsTab from '@/features/income/tabs/GuildEventsTab'
 
 // ─── Default inputs ───────────────────────────────────────────────────────────
 
-const DEFAULT_GRAND_ARENA: GrandArenaInputs = { league: 'Kyber', division: 1 }
+const DEFAULT_GRAND_ARENA: GrandArenaInputs = {
+  league: 'Kyber',
+  division: 1,
+  kyberD1Bracket: '1001+',
+}
 const DEFAULT_FLEET_ARENA: FleetArenaInputs = { rank: '1' }
 const DEFAULT_TW: TerritoryWarInputs = { guildGP: '380M+' }
 const DEFAULT_RAID: RaidInputs = { raidKey: 'order66', guildChestIdx: 0, personalMilestoneIdx: 0 }

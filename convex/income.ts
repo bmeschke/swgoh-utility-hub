@@ -38,6 +38,15 @@ const grandArenaValidator = v.object({
     v.literal('Kyber')
   ),
   division: v.union(v.literal(1), v.literal(2), v.literal(3), v.literal(4), v.literal(5)),
+  kyberD1Bracket: v.optional(
+    v.union(
+      v.literal('1-50'),
+      v.literal('51-250'),
+      v.literal('251-500'),
+      v.literal('501-1000'),
+      v.literal('1001+')
+    )
+  ),
 })
 
 const fleetArenaValidator = v.object({
@@ -59,13 +68,29 @@ const fleetArenaValidator = v.object({
 
 const territoryWarValidator = v.object({
   guildGP: v.union(
-    v.literal('<10M'),
-    v.literal('10-50M'),
-    v.literal('50-100M'),
-    v.literal('100-200M'),
-    v.literal('200-300M'),
-    v.literal('300-380M'),
-    v.literal('380M+')
+    v.literal('380M+'),
+    v.literal('360M-379M'),
+    v.literal('340M-359M'),
+    v.literal('320M-339M'),
+    v.literal('300M-319M'),
+    v.literal('280M-299M'),
+    v.literal('260M-279M'),
+    v.literal('240M-259M'),
+    v.literal('220M-239M'),
+    v.literal('200M-219M'),
+    v.literal('170M-199M'),
+    v.literal('140M-169M'),
+    v.literal('120M-139M'),
+    v.literal('100M-119M'),
+    v.literal('80M-99M'),
+    v.literal('60M-79M'),
+    v.literal('50M-59M'),
+    v.literal('40M-49M'),
+    v.literal('30M-39M'),
+    v.literal('20M-29M'),
+    v.literal('10M-19M'),
+    v.literal('5M-9M'),
+    v.literal('1M-4M')
   ),
 })
 
@@ -100,8 +125,7 @@ const tbSelectionValidator = v.object({
     v.literal('rote')
   ),
   stars: v.number(),
-  specialMissions: v.optional(v.number()),
-  bonusPlanets: v.optional(v.number()),
+  missions: v.optional(v.record(v.string(), v.number())),
 })
 
 const territoryBattlesValidator = v.object({

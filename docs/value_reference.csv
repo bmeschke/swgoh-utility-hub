@@ -87,12 +87,12 @@ Mod Material,Mod Material,Mk 2 Variable Resistor,20,Store
 Mod Material,Mod Material,Mk 2 Pulse Modulator,30,Store
 Mod Material,Mod Material,Micro Attenuator,33,Store
 Datacron Material,Datacron Material,Data-cache,0.0002,Store
-Datacron Material,Datacron Material,Mk 1 Material,5,Store
-Datacron Material,Datacron Material,Mk 2 Material,8,Store
-Datacron Material,Datacron Material,Mk 3 Material,24,Store
-Datacron Material,Datacron Material,Mk 1 Breakdown,5,Store
-Datacron Material,Datacron Material,Mk 2 Breakdown,8,Store
-Datacron Material,Datacron Material,Mk 3 Breakdown,24,Store
+Datacron Material,Datacron Material,Mk 1 Datacron Material,5,Store
+Datacron Material,Datacron Material,Mk 2 Datacron Material,8,Store
+Datacron Material,Datacron Material,Mk 3 Datacron Material,24,Store
+Datacron Material,Datacron Material,Mk 1 Datacron Reroll Material,5,Store
+Datacron Material,Datacron Material,Mk 2 Datacron Reroll Material,8,Store
+Datacron Material,Datacron Material,Mk 3 Datacron Reroll Material,24,Store
 Other,Energy,Normal Energy,0.42,First Refresh
 Other,Energy,Ship Energy,0.42,First Refresh
 Other,Energy,Mod Energy,0.42,First Refresh

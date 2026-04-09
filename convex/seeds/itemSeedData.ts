@@ -461,19 +461,19 @@ export const SEED_ITEMS: Array<{
     source: 'Store',
   },
   {
-    name: 'Mk 1 Datacron Breakdown',
+    name: 'Mk 1 Datacron Reroll Material',
     category: 'Datacron Material',
     crystalValue: 5,
     source: 'Store',
   },
   {
-    name: 'Mk 2 Datacron Breakdown',
+    name: 'Mk 2 Datacron Reroll Material',
     category: 'Datacron Material',
     crystalValue: 8,
     source: 'Store',
   },
   {
-    name: 'Mk 3 Datacron Breakdown',
+    name: 'Mk 3 Datacron Reroll Material',
     category: 'Datacron Material',
     crystalValue: 24,
     source: 'Store',

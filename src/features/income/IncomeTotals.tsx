@@ -31,9 +31,24 @@ const CURRENCY_ROWS: { key: keyof IncomeResult; label: string }[] = [
 ]
 
 const ABILITY_ROWS: { key: keyof IncomeResult; label: string }[] = [
-  { key: 'omega', label: 'Omega' },
-  { key: 'zeta', label: 'Zeta' },
   { key: 'omicron', label: 'Omicron' },
+  { key: 'zeta', label: 'Zeta' },
+  { key: 'omega', label: 'Omega' },
+]
+
+const MOD_ROWS: { key: keyof IncomeResult; label: string }[] = [
+  { key: 'mk1BondingPin', label: 'Mk 1 Bonding Pin' },
+  { key: 'mk1FusionDisk', label: 'Mk 1 Fusion Disk' },
+  { key: 'mk1PowerFlowControlChip', label: 'Mk 1 Power Flow Control Chip' },
+  { key: 'mk1FusionCoil', label: 'Mk 1 Fusion Coil' },
+  { key: 'mk1Amplifier', label: 'Mk 1 Amplifier' },
+  { key: 'mk1Capacitor', label: 'Mk 1 Capacitor' },
+  { key: 'mk2CircuitBreaker', label: 'Mk 2 Circuit Breaker Module' },
+  { key: 'thermalExchange', label: 'Mk 2 Thermal Exchange Unit' },
+  { key: 'variableResistor', label: 'Mk 2 Variable Resistor' },
+  { key: 'microprocessor', label: 'Mk 2 Microprocessor' },
+  { key: 'mk2PulseModulator', label: 'Mk 2 Pulse Modulator' },
+  { key: 'microAttenuators', label: 'Micro Attenuators' },
 ]
 
 const GEAR_ROWS: { key: keyof IncomeResult; label: string }[] = [
@@ -42,31 +57,32 @@ const GEAR_ROWS: { key: keyof IncomeResult; label: string }[] = [
   { key: 'injectorHead', label: 'Injector Head Salvage' },
   { key: 'injectorHandle', label: 'Injector Handle Salvage' },
   { key: 'injectorCell', label: 'Injector Cell Salvage' },
+]
+
+const RELIC_MAT_ROWS: { key: keyof IncomeResult; label: string }[] = [
   { key: 'greySignalData', label: 'Grey Signal Data' },
   { key: 'greenSignalData', label: 'Green Signal Data' },
   { key: 'blueSignalData', label: 'Blue Signal Data' },
-  { key: 'bronziumWiring', label: 'Bronzium Wiring' },
   { key: 'carboniteCircuitBoard', label: 'Carbonite Circuit Board' },
+  { key: 'bronziumWiring', label: 'Bronzium Wiring' },
   { key: 'chromiumTransistors', label: 'Chromium Transistors' },
   { key: 'aurodiumHeatsink', label: 'Aurodium Heatsink' },
   { key: 'electriumConductor', label: 'Electrium Conductor' },
   { key: 'zinbiddleCard', label: 'Zinbiddle Card' },
-  { key: 'impulseDetector', label: 'Impulse Detector' },
   { key: 'aeromagnifier', label: 'Aeromagnifier' },
-  { key: 'droidBrain', label: 'Droid Brain' },
+  { key: 'impulseDetector', label: 'Impulse Detector' },
   { key: 'gyrdaKeypad', label: 'Gyrda Keypad' },
+  { key: 'droidBrain', label: 'Droid Brain' },
 ]
 
-const MOD_ROWS: { key: keyof IncomeResult; label: string }[] = [
-  { key: 'mk1FusionDisk', label: 'Mk 1 Fusion Disk' },
-  { key: 'mk1FusionCoil', label: 'Mk 1 Fusion Coil' },
-  { key: 'mk1PowerFlowControlChip', label: 'Mk 1 Power Flow Control Chip' },
-  { key: 'mk1Capacitor', label: 'Mk 1 Capacitor' },
-  { key: 'mk1Amplifier', label: 'Mk 1 Amplifier' },
-  { key: 'mk2PulseModulator', label: 'Mk 2 Pulse Modulator' },
-  { key: 'mk2CircuitBreaker', label: 'Mk 2 Circuit Breaker Module' },
-  { key: 'mk1BondingPin', label: 'Mk 1 Bonding Pin' },
-  { key: 'microAttenuators', label: 'Micro Attenuators' },
+const DATACRON_ROWS: { key: keyof IncomeResult; label: string }[] = [
+  { key: 'twDataCache', label: 'Data-Cache' },
+  { key: 'mk1DatacronMat', label: 'Mk 1 Datacron Material' },
+  { key: 'mk2DatacronMat', label: 'Mk 2 Datacron Material' },
+  { key: 'mk3DatacronMat', label: 'Mk 3 Datacron Material' },
+  { key: 'mk1DatacronReroll', label: 'Mk 1 Datacron Reroll Material' },
+  { key: 'mk2DatacronReroll', label: 'Mk 2 Datacron Reroll Material' },
+  { key: 'mk3DatacronReroll', label: 'Mk 3 Datacron Reroll Material' },
 ]
 
 // ─── Breakdown tooltip content ─────────────────────────────────────────────
@@ -164,25 +180,44 @@ function TotalsSection({
             )
           }
 
-          // Rows with multiple sources get a tooltip on the label
+          // Rows with multiple sources get a tooltip on all three cells
+          const tooltipContent = (
+            <TooltipContent
+              side="right"
+              sideOffset={8}
+              className="!bg-card !text-card-foreground border border-border shadow-lg px-3 py-2.5 max-w-none"
+            >
+              <BreakdownTooltip rowKey={key} sources={breakdown!} total={monthly} />
+            </TooltipContent>
+          )
           return (
             <React.Fragment key={key}>
               <Tooltip>
                 <TooltipTrigger render={<span className="pr-4 cursor-help w-fit" />}>
                   {label}
                 </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  sideOffset={8}
-                  className="!bg-card !text-card-foreground border border-border shadow-lg px-3 py-2.5 max-w-none"
-                >
-                  <BreakdownTooltip rowKey={key} sources={breakdown!} total={monthly} />
-                </TooltipContent>
+                {tooltipContent}
               </Tooltip>
-              <span className="text-right tabular-nums whitespace-nowrap pr-3">{fmt(monthly)}</span>
-              <span className="text-right tabular-nums whitespace-nowrap text-muted-foreground">
-                ~{fmt(daily(monthly))}/day
-              </span>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <span className="text-right tabular-nums whitespace-nowrap pr-3 cursor-help" />
+                  }
+                >
+                  {fmt(monthly)}
+                </TooltipTrigger>
+                {tooltipContent}
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <span className="text-right tabular-nums whitespace-nowrap text-muted-foreground cursor-help" />
+                  }
+                >
+                  ~{fmt(daily(monthly))}/day
+                </TooltipTrigger>
+                {tooltipContent}
+              </Tooltip>
             </React.Fragment>
           )
         })}
@@ -242,10 +277,24 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
           />
         </div>
 
-        {/* Right column: Gear */}
+        {/* Right column: Gear + Relic Materials + Datacron Materials */}
         <div className="space-y-4">
           <SectionHeader />
           <TotalsSection heading="Gear" rows={GEAR_ROWS} totals={totals} breakdown={breakdown} />
+          <div className="border-t" />
+          <TotalsSection
+            heading="Relic Materials"
+            rows={RELIC_MAT_ROWS}
+            totals={totals}
+            breakdown={breakdown}
+          />
+          <div className="border-t" />
+          <TotalsSection
+            heading="Datacron Materials"
+            rows={DATACRON_ROWS}
+            totals={totals}
+            breakdown={breakdown}
+          />
         </div>
       </div>
     </div>

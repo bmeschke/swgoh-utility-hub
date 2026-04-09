@@ -50,8 +50,9 @@ export default function IncomeAssumptionsModal() {
               per season, always finishing 2nd–4th place
             </li>
             <li>
-              <span className="font-medium text-foreground">Territory Wars</span> — 1 win + 1 loss
-              per month (2 events total)
+              <span className="font-medium text-foreground">Territory Wars</span> — 2 wins + 2
+              losses per month (4 events total); Prize Box rewards are not included as drop odds are
+              unknown
             </li>
             <li>
               <span className="font-medium text-foreground">Raids</span> — 4 raids per month

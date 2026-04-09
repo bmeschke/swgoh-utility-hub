@@ -16,7 +16,7 @@ export interface SelectRowProps {
   onValueChange: (v: string) => void
   options: { value: string; label: string }[]
   /** Width of the select trigger. Defaults to 'w-44'. */
-  width?: 'w-44' | 'w-52'
+  width?: string
   /** When true, grays out the row and shows an N/A placeholder instead of a Select. */
   disabled?: boolean
 }

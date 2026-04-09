@@ -6,6 +6,8 @@ import {
   type TBSelection,
   type TerritoryBattleInputs,
 } from '@/lib/income'
+import { TB_MISSIONS, type RegularMissionDef, type ChestMissionDef } from '@/lib/tb-data'
+import SelectRow from '@/features/income/SelectRow'
 import {
   Select,
   SelectContent,
@@ -16,6 +18,36 @@ import {
 
 const TB_TYPES: TBType[] = ['rote', 'lsGeo', 'dsGeo', 'lsHoth', 'dsHoth']
 
+const COMPLETION_OPTIONS = Array.from({ length: 51 }, (_, i) => ({
+  value: String(i),
+  label: String(i),
+}))
+
+const CHEST_OPTIONS = [
+  { value: '0', label: '0' },
+  { value: '1', label: '1' },
+  { value: '2', label: '2' },
+]
+
+interface MissionRowProps {
+  def: RegularMissionDef | ChestMissionDef
+  value: number
+  onChange: (v: number) => void
+}
+
+function MissionRow({ def, value, onChange }: MissionRowProps) {
+  return (
+    <SelectRow
+      label={def.zone}
+      sublabel={def.label}
+      value={String(value)}
+      onValueChange={(v) => onChange(Number(v))}
+      options={def.type === 'chests' ? CHEST_OPTIONS : COMPLETION_OPTIONS}
+      width="w-20"
+    />
+  )
+}
+
 interface TBSelectorProps {
   label: string
   value: TBSelection
@@ -25,18 +57,26 @@ interface TBSelectorProps {
 function TBSelector({ label, value, onChange }: TBSelectorProps) {
   const [showDetail, setShowDetail] = useState(false)
   const maxStars = TB_MAX_STARS[value.tb]
+  const missionDefs = TB_MISSIONS[value.tb]
+  const missions = value.missions ?? {}
+
+  function setMission(key: string, count: number) {
+    onChange({ ...value, missions: { ...missions, [key]: count } })
+  }
+
+  function handleTBChange(tb: TBType) {
+    onChange({ tb, stars: 0, missions: {} })
+  }
 
   return (
     <div className="rounded border p-3 space-y-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="flex items-center justify-between gap-3">
+        {/* TB Type */}
+        <div className="flex items-center justify-between gap-3 rounded border p-2">
           <span className="text-sm font-medium">Territory Battle</span>
-          <Select
-            value={value.tb}
-            onValueChange={(v) => v && onChange({ ...value, tb: v as TBType, stars: 0 })}
-          >
+          <Select value={value.tb} onValueChange={(v) => v && handleTBChange(v as TBType)}>
             <SelectTrigger className="w-48 h-8 text-xs">
               <SelectValue>{TB_TYPE_LABELS[value.tb]}</SelectValue>
             </SelectTrigger>
@@ -50,77 +90,39 @@ function TBSelector({ label, value, onChange }: TBSelectorProps) {
           </Select>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium">Stars Achieved</span>
-          <Select
-            value={String(value.stars)}
-            onValueChange={(v) => v && onChange({ ...value, stars: Number(v) })}
-          >
-            <SelectTrigger className="w-24 h-8 text-xs">
-              <SelectValue>{value.stars} ★</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: maxStars + 1 }, (_, i) => i).map((n) => (
-                <SelectItem key={n} value={String(n)} className="text-xs">
-                  {n} ★
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Stars */}
+        <SelectRow
+          label="Stars Achieved"
+          value={String(value.stars)}
+          displayValue={`${value.stars} ★`}
+          onValueChange={(v) => onChange({ ...value, stars: Number(v) })}
+          options={Array.from({ length: maxStars + 1 }, (_, i) => ({
+            value: String(i),
+            label: `${i} ★`,
+          }))}
+          width="w-24"
+        />
       </div>
 
+      {/* Mission toggle */}
       <button
         type="button"
         onClick={() => setShowDetail(!showDetail)}
         className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
       >
-        {showDetail ? 'Hide details' : 'Add detail (special missions, bonus planets)'}
+        {showDetail ? 'Hide missions' : 'Add mission completions'}
       </button>
 
       {showDetail && (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium">Special Missions</span>
-            <Select
-              value={String(value.specialMissions ?? 0)}
-              onValueChange={(v) =>
-                v !== undefined && onChange({ ...value, specialMissions: Number(v) })
-              }
-            >
-              <SelectTrigger className="w-24 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[0, 1, 2, 3, 4, 5].map((n) => (
-                  <SelectItem key={n} value={String(n)} className="text-xs">
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium">Bonus Planets Maxed</span>
-            <Select
-              value={String(value.bonusPlanets ?? 0)}
-              onValueChange={(v) =>
-                v !== undefined && onChange({ ...value, bonusPlanets: Number(v) })
-              }
-            >
-              <SelectTrigger className="w-24 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[0, 1, 2, 3].map((n) => (
-                  <SelectItem key={n} value={String(n)} className="text-xs">
-                    {n}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {missionDefs.map((def) => (
+            <MissionRow
+              key={def.key}
+              def={def}
+              value={missions[def.key] ?? 0}
+              onChange={(v) => setMission(def.key, v)}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -136,8 +138,8 @@ export default function TerritoryBattlesSection({ inputs, onChange }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Select the two Territory Battles your guild runs each month and the stars achieved. Reward
-        data pending — totals will update once added.
+        Select the two Territory Battles your guild runs each month, the stars achieved, and
+        optionally the mission completions for each zone.
       </p>
       <div className="space-y-3">
         <TBSelector

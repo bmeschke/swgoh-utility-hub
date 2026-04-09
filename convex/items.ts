@@ -116,6 +116,31 @@ export const internalSeed = internalMutation({
   },
 })
 
+/** One-time migration: rename "Mk N Datacron Breakdown" → "Mk N Reroll" */
+export const renameRerollMats = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const renames: Array<{ from: string; to: string }> = [
+      { from: 'Mk 1 Datacron Breakdown', to: 'Mk 1 Datacron Reroll Material' },
+      { from: 'Mk 2 Datacron Breakdown', to: 'Mk 2 Datacron Reroll Material' },
+      { from: 'Mk 3 Datacron Breakdown', to: 'Mk 3 Datacron Reroll Material' },
+    ]
+    let updated = 0
+    for (const { from, to } of renames) {
+      const results = await ctx.db
+        .query('items')
+        .withSearchIndex('search_name', (q) => q.search('name', from))
+        .take(5)
+      const match = results.find((i) => i.name.toLowerCase() === from.toLowerCase())
+      if (match) {
+        await ctx.db.patch(match._id, { name: to })
+        updated++
+      }
+    }
+    return { updated }
+  },
+})
+
 /** Internal: backfill the `source` field on all items that match seed data by name */
 export const backfillSources = internalMutation({
   args: {},

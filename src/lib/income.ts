@@ -1,3 +1,5 @@
+import { TB_STAR_PAYOUTS, TB_MISSIONS } from '@/lib/tb-data'
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface IncomeResult {
@@ -48,6 +50,17 @@ export interface IncomeResult {
   mk2CircuitBreaker: number
   mk1BondingPin: number
   microAttenuators: number
+  thermalExchange: number
+  variableResistor: number
+  microprocessor: number
+  // Datacron Materials
+  twDataCache: number
+  mk1DatacronMat: number
+  mk2DatacronMat: number
+  mk3DatacronMat: number
+  mk1DatacronReroll: number
+  mk2DatacronReroll: number
+  mk3DatacronReroll: number
 }
 
 export const ZERO_INCOME: IncomeResult = {
@@ -91,6 +104,16 @@ export const ZERO_INCOME: IncomeResult = {
   mk2CircuitBreaker: 0,
   mk1BondingPin: 0,
   microAttenuators: 0,
+  thermalExchange: 0,
+  variableResistor: 0,
+  microprocessor: 0,
+  twDataCache: 0,
+  mk1DatacronMat: 0,
+  mk2DatacronMat: 0,
+  mk3DatacronMat: 0,
+  mk1DatacronReroll: 0,
+  mk2DatacronReroll: 0,
+  mk3DatacronReroll: 0,
 }
 
 // ─── Assault Battles ──────────────────────────────────────────────────────────
@@ -286,10 +309,13 @@ export function computeAssaultBattleIncome(inputs: AssaultBattleInputs): IncomeR
 
 export type GACLeague = 'Carbonite' | 'Bronzium' | 'Chromium' | 'Aurodium' | 'Kyber'
 export type GACDivision = 1 | 2 | 3 | 4 | 5
+// Kyber Division I is further split by rank; affects event-end crystal reward only
+export type KyberD1Bracket = '1-50' | '51-250' | '251-500' | '501-1000' | '1001+'
 
 export interface GrandArenaInputs {
   league: GACLeague
   division: GACDivision
+  kyberD1Bracket?: KyberD1Bracket
 }
 
 export const GAC_LEAGUE_LABELS: Record<GACLeague, string> = {
@@ -300,35 +326,106 @@ export const GAC_LEAGUE_LABELS: Record<GACLeague, string> = {
   Carbonite: 'Carbonite',
 }
 
-// Daily crystal payouts per league / division (confirmed, swgoh.wiki)
-const GAC_DAILY_CRYSTALS: Record<GACLeague, Record<GACDivision, number>> = {
-  Kyber: { 1: 260, 2: 240, 3: 220, 4: 200, 5: 180 },
-  Aurodium: { 1: 170, 2: 160, 3: 150, 4: 140, 5: 130 },
-  Chromium: { 1: 125, 2: 120, 3: 115, 4: 110, 5: 105 },
-  Bronzium: { 1: 100, 2: 95, 3: 90, 4: 85, 5: 80 },
-  Carbonite: { 1: 75, 2: 70, 3: 65, 4: 60, 5: 55 },
+export const KYBER_D1_BRACKET_OPTIONS: { value: KyberD1Bracket; label: string }[] = [
+  { value: '1-50', label: 'Rank 1–50' },
+  { value: '51-250', label: 'Rank 51–250' },
+  { value: '251-500', label: 'Rank 251–500' },
+  { value: '501-1000', label: 'Rank 501–1,000' },
+  { value: '1001+', label: 'Rank 1,001+' },
+]
+
+// Event-end crystal reward by Kyber D1 rank bracket
+const KYBER_D1_EVENT_END: Record<KyberD1Bracket, number> = {
+  '1-50': 2500,
+  '51-250': 2405,
+  '251-500': 2310,
+  '501-1000': 2220,
+  '1001+': 2135,
 }
 
-// Fixed monthly assumptions:
-// - 4 GAC seasons/month, 5 wins + 4 losses per season → always 2nd–4th placement
-// - Round win: 900 crystals + 125 championship tokens
-// - Weekly event (2nd–4th rank): 500 crystals + 1,600 championship tokens
-const GAC_WINS_PER_MONTH = 5
-const GAC_EVENTS_PER_MONTH = 4
-const GAC_ROUND_WIN_CRYSTALS = 900
-const GAC_ROUND_WIN_TOKENS = 125
-const GAC_EVENT_RANK_2_4_CRYSTALS = 500
-const GAC_EVENT_RANK_2_4_TOKENS = 1600
+// Per-division payouts (daily crystals, win crystals, loss crystals, event-end crystals)
+interface GACPayouts {
+  daily: number
+  win: number
+  loss: number
+  eventEnd: number // Kyber D1: base (1001+ bracket); overridden by kyberD1Bracket input
+}
+
+const GAC_PAYOUTS: Record<GACLeague, Record<GACDivision, GACPayouts>> = {
+  Kyber: {
+    1: { daily: 260, win: 900, loss: 200, eventEnd: 2135 },
+    2: { daily: 240, win: 825, loss: 200, eventEnd: 2050 },
+    3: { daily: 220, win: 750, loss: 200, eventEnd: 1970 },
+    4: { daily: 200, win: 675, loss: 200, eventEnd: 1895 },
+    5: { daily: 180, win: 600, loss: 200, eventEnd: 1820 },
+  },
+  Aurodium: {
+    1: { daily: 170, win: 550, loss: 150, eventEnd: 1590 },
+    2: { daily: 160, win: 510, loss: 150, eventEnd: 1515 },
+    3: { daily: 150, win: 470, loss: 150, eventEnd: 1445 },
+    4: { daily: 140, win: 430, loss: 150, eventEnd: 1375 },
+    5: { daily: 130, win: 390, loss: 150, eventEnd: 1310 },
+  },
+  Chromium: {
+    1: { daily: 125, win: 350, loss: 80, eventEnd: 1080 },
+    2: { daily: 120, win: 320, loss: 80, eventEnd: 1005 },
+    3: { daily: 115, win: 290, loss: 80, eventEnd: 935 },
+    4: { daily: 110, win: 260, loss: 80, eventEnd: 870 },
+    5: { daily: 105, win: 230, loss: 80, eventEnd: 805 },
+  },
+  Bronzium: {
+    1: { daily: 100, win: 200, loss: 50, eventEnd: 670 },
+    2: { daily: 95, win: 180, loss: 50, eventEnd: 630 },
+    3: { daily: 90, win: 160, loss: 50, eventEnd: 595 },
+    4: { daily: 85, win: 140, loss: 50, eventEnd: 560 },
+    5: { daily: 80, win: 120, loss: 50, eventEnd: 530 },
+  },
+  Carbonite: {
+    1: { daily: 75, win: 110, loss: 30, eventEnd: 290 },
+    2: { daily: 70, win: 100, loss: 30, eventEnd: 225 },
+    3: { daily: 65, win: 90, loss: 30, eventEnd: 170 },
+    4: { daily: 60, win: 80, loss: 30, eventEnd: 130 },
+    5: { daily: 55, win: 70, loss: 30, eventEnd: 100 },
+  },
+}
+
+// Monthly assumptions:
+// - 1 season/month: 3 active weeks + 1 week off (daily crystals awarded all 30 days)
+// - 5 wins + 4 losses per season (→ 2nd–4th placement assumed)
+// - Weekly-end placement assumed 2nd–4th: 500 crystals + fixed non-crystal rewards
+// - Non-crystal weekly-end rewards are identical across all leagues/divisions
+const GAC_WEEKS_PER_SEASON = 3
+const GAC_WINS_PER_SEASON = 5
+const GAC_LOSSES_PER_SEASON = 4
+const GAC_WE_CRYSTALS = 500 // assumed 2nd–4th weekly placement for all players
 
 export function computeGrandArenaIncome(inputs: GrandArenaInputs): IncomeResult {
-  const daily = GAC_DAILY_CRYSTALS[inputs.league][inputs.division]
+  const p = GAC_PAYOUTS[inputs.league][inputs.division]
+  const eventEnd =
+    inputs.league === 'Kyber' && inputs.division === 1 && inputs.kyberD1Bracket
+      ? KYBER_D1_EVENT_END[inputs.kyberD1Bracket]
+      : p.eventEnd
+
   const crystals =
-    daily * 30 +
-    GAC_WINS_PER_MONTH * GAC_ROUND_WIN_CRYSTALS +
-    GAC_EVENTS_PER_MONTH * GAC_EVENT_RANK_2_4_CRYSTALS
-  const championshipTokens =
-    GAC_WINS_PER_MONTH * GAC_ROUND_WIN_TOKENS + GAC_EVENTS_PER_MONTH * GAC_EVENT_RANK_2_4_TOKENS
-  return { ...ZERO_INCOME, crystals, championshipTokens }
+    30 * p.daily +
+    GAC_WEEKS_PER_SEASON * GAC_WE_CRYSTALS +
+    eventEnd +
+    GAC_WINS_PER_SEASON * p.win +
+    GAC_LOSSES_PER_SEASON * p.loss
+
+  return {
+    ...ZERO_INCOME,
+    crystals,
+    // Non-crystal weekly-end rewards × 3 weeks (same for everyone)
+    getMk1: GAC_WEEKS_PER_SEASON * 150,
+    zeta: GAC_WEEKS_PER_SEASON * 2,
+    omega: GAC_WEEKS_PER_SEASON * 3,
+    mk1PowerFlowControlChip: GAC_WEEKS_PER_SEASON * 43,
+    mk1FusionCoil: GAC_WEEKS_PER_SEASON * 38,
+    mk1Amplifier: GAC_WEEKS_PER_SEASON * 54,
+    mk1Capacitor: GAC_WEEKS_PER_SEASON * 54,
+    mk2PulseModulator: GAC_WEEKS_PER_SEASON * 22,
+  }
 }
 
 // ─── Fleet Arena ──────────────────────────────────────────────────────────────
@@ -401,57 +498,346 @@ export function computeFleetArenaIncome(inputs: FleetArenaInputs): IncomeResult 
 // ─── Territory Wars ───────────────────────────────────────────────────────────
 
 export type TWGuildBracket =
-  | '<10M'
-  | '10-50M'
-  | '50-100M'
-  | '100-200M'
-  | '200-300M'
-  | '300-380M'
   | '380M+'
+  | '360M-379M'
+  | '340M-359M'
+  | '320M-339M'
+  | '300M-319M'
+  | '280M-299M'
+  | '260M-279M'
+  | '240M-259M'
+  | '220M-239M'
+  | '200M-219M'
+  | '170M-199M'
+  | '140M-169M'
+  | '120M-139M'
+  | '100M-119M'
+  | '80M-99M'
+  | '60M-79M'
+  | '50M-59M'
+  | '40M-49M'
+  | '30M-39M'
+  | '20M-29M'
+  | '10M-19M'
+  | '5M-9M'
+  | '1M-4M'
 
 export const TW_BRACKET_LABELS: Record<TWGuildBracket, string> = {
-  '<10M': 'Under 10M GP',
-  '10-50M': '10M – 50M GP',
-  '50-100M': '50M – 100M GP',
-  '100-200M': '100M – 200M GP',
-  '200-300M': '200M – 300M GP',
-  '300-380M': '300M – 380M GP',
   '380M+': '380M+ GP',
+  '360M-379M': '360M – 379.9M GP',
+  '340M-359M': '340M – 359.9M GP',
+  '320M-339M': '320M – 339.9M GP',
+  '300M-319M': '300M – 319.9M GP',
+  '280M-299M': '280M – 299.9M GP',
+  '260M-279M': '260M – 279.9M GP',
+  '240M-259M': '240M – 259.9M GP',
+  '220M-239M': '220M – 239.9M GP',
+  '200M-219M': '200M – 219.9M GP',
+  '170M-199M': '170M – 199.9M GP',
+  '140M-169M': '140M – 169.9M GP',
+  '120M-139M': '120M – 139.9M GP',
+  '100M-119M': '100M – 119.9M GP',
+  '80M-99M': '80M – 99.9M GP',
+  '60M-79M': '60M – 79.9M GP',
+  '50M-59M': '50M – 59.9M GP',
+  '40M-49M': '40M – 49.9M GP',
+  '30M-39M': '30M – 39.9M GP',
+  '20M-29M': '20M – 29.9M GP',
+  '10M-19M': '10M – 19.9M GP',
+  '5M-9M': '5M – 9.9M GP',
+  '1M-4M': '1M – 4.9M GP',
 }
 
 export interface TerritoryWarInputs {
   guildGP: TWGuildBracket
 }
 
-// Rewards per TW event by bracket — assume 1 win + 1 loss per month (2 events)
-// Only 380M+ bracket is confirmed from swgoh.wiki; others are TODO
-// TODO: Verify and fill in reward amounts for all non-380M+ brackets
+// Monthly assumption: 4 TW events/month, 2 wins + 2 losses
 const TW_WIN_REWARDS: Record<TWGuildBracket, Partial<IncomeResult>> = {
-  '380M+': { getMk1: 500, getMk2: 650 },
-  '300-380M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '200-300M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '100-200M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '50-100M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '10-50M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '<10M': { getMk1: 0, getMk2: 0 }, // TODO: verify
+  '380M+': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 3,
+    droidBrain: 5,
+    mk1DatacronReroll: 30,
+    mk2DatacronReroll: 45,
+    mk3DatacronReroll: 60,
+    twDataCache: 1000000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '360M-379M': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 3,
+    droidBrain: 4,
+    mk1DatacronReroll: 30,
+    mk2DatacronReroll: 30,
+    mk3DatacronReroll: 45,
+    twDataCache: 750000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '340M-359M': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 3,
+    droidBrain: 3,
+    mk1DatacronReroll: 30,
+    mk2DatacronReroll: 30,
+    mk3DatacronReroll: 30,
+    twDataCache: 500000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '320M-339M': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 3,
+    droidBrain: 2,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 20,
+    mk3DatacronReroll: 30,
+    twDataCache: 375000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '300M-319M': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 2,
+    droidBrain: 1,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 20,
+    mk3DatacronReroll: 20,
+    twDataCache: 250000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '280M-299M': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 2,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 20,
+    mk3DatacronReroll: 20,
+    twDataCache: 150000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '260M-279M': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 2,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 20,
+    mk3DatacronReroll: 15,
+    twDataCache: 125000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '240M-259M': {
+    zeta: 3,
+    omega: 4,
+    aeromagnifier: 1,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 15,
+    mk3DatacronReroll: 15,
+    twDataCache: 100000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '220M-239M': {
+    zeta: 3,
+    omega: 4,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 15,
+    mk3DatacronReroll: 15,
+    twDataCache: 75000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '200M-219M': {
+    zeta: 3,
+    omega: 4,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 10,
+    twDataCache: 50000,
+    getMk1: 500,
+    getMk2: 650,
+  },
+  '170M-199M': {
+    zeta: 3,
+    omega: 4,
+    mk1DatacronReroll: 20,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 10,
+    twDataCache: 50000,
+    getMk1: 500,
+    getMk2: 500,
+  },
+  '140M-169M': { zeta: 3, omega: 4, getMk1: 500 },
+  '120M-139M': { zeta: 3, omega: 4, getMk1: 475 },
+  '100M-119M': { zeta: 2, omega: 3, getMk1: 475 },
+  '80M-99M': { zeta: 2, omega: 3, getMk1: 450 },
+  '60M-79M': { zeta: 2, omega: 3, getMk1: 425 },
+  '50M-59M': { zeta: 1, omega: 2, getMk1: 400 },
+  '40M-49M': { zeta: 1, omega: 2, getMk1: 400 },
+  '30M-39M': { zeta: 1, omega: 2, getMk1: 375 },
+  '20M-29M': { omega: 1, getMk1: 375 },
+  '10M-19M': { omega: 1, getMk1: 350 },
+  '5M-9M': { omega: 1, getMk1: 325 },
+  '1M-4M': { getMk1: 325 },
 }
+
 const TW_LOSS_REWARDS: Record<TWGuildBracket, Partial<IncomeResult>> = {
-  '380M+': { getMk1: 425, getMk2: 550 },
-  '300-380M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '200-300M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '100-200M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '50-100M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '10-50M': { getMk1: 0, getMk2: 0 }, // TODO: verify
-  '<10M': { getMk1: 0, getMk2: 0 }, // TODO: verify
+  '380M+': {
+    zeta: 2,
+    omega: 3,
+    aeromagnifier: 1,
+    droidBrain: 1,
+    mk1DatacronReroll: 15,
+    mk2DatacronReroll: 15,
+    mk3DatacronReroll: 20,
+    twDataCache: 500000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '360M-379M': {
+    zeta: 2,
+    omega: 3,
+    aeromagnifier: 1,
+    droidBrain: 1,
+    mk1DatacronReroll: 15,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 15,
+    twDataCache: 375000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '340M-359M': {
+    zeta: 2,
+    omega: 3,
+    aeromagnifier: 1,
+    droidBrain: 1,
+    mk1DatacronReroll: 15,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 10,
+    twDataCache: 250000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '320M-339M': {
+    zeta: 2,
+    omega: 3,
+    aeromagnifier: 1,
+    droidBrain: 1,
+    mk1DatacronReroll: 10,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 10,
+    twDataCache: 187000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '300M-319M': {
+    zeta: 2,
+    omega: 3,
+    aeromagnifier: 1,
+    mk1DatacronReroll: 10,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 10,
+    twDataCache: 125000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '280M-299M': {
+    zeta: 2,
+    omega: 3,
+    aeromagnifier: 1,
+    mk1DatacronReroll: 10,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 10,
+    twDataCache: 75000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '260M-279M': {
+    zeta: 2,
+    omega: 3,
+    mk1DatacronReroll: 10,
+    mk2DatacronReroll: 10,
+    mk3DatacronReroll: 5,
+    twDataCache: 62500,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '240M-259M': {
+    zeta: 2,
+    omega: 3,
+    mk1DatacronReroll: 10,
+    mk2DatacronReroll: 5,
+    mk3DatacronReroll: 5,
+    twDataCache: 50000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '220M-239M': {
+    zeta: 2,
+    omega: 3,
+    mk1DatacronReroll: 10,
+    mk2DatacronReroll: 5,
+    mk3DatacronReroll: 5,
+    twDataCache: 50000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '200M-219M': {
+    zeta: 2,
+    omega: 3,
+    mk1DatacronReroll: 10,
+    twDataCache: 50000,
+    getMk1: 425,
+    getMk2: 550,
+  },
+  '170M-199M': {
+    zeta: 2,
+    omega: 3,
+    mk1DatacronReroll: 10,
+    twDataCache: 50000,
+    getMk1: 425,
+    getMk2: 400,
+  },
+  '140M-169M': { zeta: 2, omega: 3, getMk1: 425 },
+  '120M-139M': { zeta: 2, omega: 3, getMk1: 400 },
+  '100M-119M': { zeta: 1, omega: 2, getMk1: 400 },
+  '80M-99M': { zeta: 1, omega: 2, getMk1: 375 },
+  '60M-79M': { zeta: 1, omega: 2, getMk1: 350 },
+  '50M-59M': { omega: 1, getMk1: 325 },
+  '40M-49M': { omega: 1, getMk1: 325 },
+  '30M-39M': { omega: 1, getMk1: 300 },
+  '20M-29M': { getMk1: 300 },
+  '10M-19M': { getMk1: 275 },
+  '5M-9M': { getMk1: 250 },
+  '1M-4M': { getMk1: 250 },
 }
 
 export function computeTerritoryWarIncome(inputs: TerritoryWarInputs): IncomeResult {
-  const win = TW_WIN_REWARDS[inputs.guildGP]
-  const loss = TW_LOSS_REWARDS[inputs.guildGP]
+  const w = TW_WIN_REWARDS[inputs.guildGP]
+  const l = TW_LOSS_REWARDS[inputs.guildGP]
+  const g = (p: Partial<IncomeResult>, k: keyof IncomeResult) => (p[k] as number) ?? 0
   return {
     ...ZERO_INCOME,
-    getMk1: (win.getMk1 ?? 0) + (loss.getMk1 ?? 0),
-    getMk2: (win.getMk2 ?? 0) + (loss.getMk2 ?? 0),
+    zeta: 2 * g(w, 'zeta') + 2 * g(l, 'zeta'),
+    omega: 2 * g(w, 'omega') + 2 * g(l, 'omega'),
+    aeromagnifier: 2 * g(w, 'aeromagnifier') + 2 * g(l, 'aeromagnifier'),
+    droidBrain: 2 * g(w, 'droidBrain') + 2 * g(l, 'droidBrain'),
+    mk1DatacronReroll: 2 * g(w, 'mk1DatacronReroll') + 2 * g(l, 'mk1DatacronReroll'),
+    mk2DatacronReroll: 2 * g(w, 'mk2DatacronReroll') + 2 * g(l, 'mk2DatacronReroll'),
+    mk3DatacronReroll: 2 * g(w, 'mk3DatacronReroll') + 2 * g(l, 'mk3DatacronReroll'),
+    twDataCache: 2 * g(w, 'twDataCache') + 2 * g(l, 'twDataCache'),
+    getMk1: 2 * g(w, 'getMk1') + 2 * g(l, 'getMk1'),
+    getMk2: 2 * g(w, 'getMk2') + 2 * g(l, 'getMk2'),
   }
 }
 
@@ -887,17 +1273,18 @@ export const TB_TYPE_LABELS: Record<TBType, string> = {
 
 export const TB_MAX_STARS: Record<TBType, number> = {
   lsHoth: 45,
-  dsHoth: 45,
-  lsGeo: 60,
-  dsGeo: 60,
-  rote: 65,
+  dsHoth: 48,
+  lsGeo: 36,
+  dsGeo: 33,
+  rote: 56,
 }
 
 export interface TBSelection {
   tb: TBType
   stars: number
-  specialMissions?: number
-  bonusPlanets?: number
+  /** Per-mission completion counts. Keys match TBMissionDef.key; values are completion counts (0–50)
+   *  for regular missions or chest counts (0–2) for bonus chest missions. */
+  missions?: Record<string, number>
 }
 
 export interface TerritoryBattleInputs {
@@ -905,11 +1292,50 @@ export interface TerritoryBattleInputs {
   tb2: TBSelection
 }
 
-// TODO: Fill in per-star GET reward tables for each TB type (user to provide)
-// Rewards are ZERO until confirmed data is provided
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function computeSingleTBIncome(sel: TBSelection): IncomeResult {
+  const result = { ...ZERO_INCOME }
+
+  // Star reward (non-cumulative — user gets only the reward for their exact star count)
+  const starPayouts = TB_STAR_PAYOUTS[sel.tb]
+  if (starPayouts && sel.stars >= 0 && sel.stars < starPayouts.length) {
+    const starReward = starPayouts[sel.stars]
+    for (const k in starReward) {
+      const key = k as keyof IncomeResult
+      result[key] = (result[key] as number) + ((starReward[key] as number) ?? 0)
+    }
+  }
+
+  // Mission rewards
+  if (sel.missions) {
+    const missionDefs = TB_MISSIONS[sel.tb] ?? []
+    for (const def of missionDefs) {
+      const count = sel.missions[def.key] ?? 0
+      if (count <= 0) continue
+
+      if (def.type === 'regular') {
+        for (const k in def.rewardPerCompletion) {
+          const key = k as keyof IncomeResult
+          result[key] =
+            (result[key] as number) + ((def.rewardPerCompletion[key] as number) ?? 0) * count
+        }
+      } else {
+        // Chest mission: cumulative — granting chests 1..count
+        for (let c = 0; c < count && c < def.chestRewards.length; c++) {
+          const chestReward = def.chestRewards[c]
+          for (const k in chestReward) {
+            const key = k as keyof IncomeResult
+            result[key] = (result[key] as number) + ((chestReward[key] as number) ?? 0)
+          }
+        }
+      }
+    }
+  }
+
+  return result
+}
+
 export function computeTerritoryBattleIncome(inputs: TerritoryBattleInputs): IncomeResult {
-  return { ...ZERO_INCOME }
+  return sumIncome(computeSingleTBIncome(inputs.tb1), computeSingleTBIncome(inputs.tb2))
 }
 
 // ─── Conquest ─────────────────────────────────────────────────────────────────
