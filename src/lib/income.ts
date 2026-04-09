@@ -1378,7 +1378,7 @@ export const CONQUEST_HARD_CRATE_LABELS: Record<number, string> = {
 // TODO: Fill in signal data amounts per crate tier for Normal and Hard modes
 // Rewards are ZERO until confirmed data is provided
 export function computeConquestIncome(inputs: ConquestInputs): IncomeResult {
-  // eslint-disable-line @typescript-eslint/no-unused-vars
+  void inputs // stub — rewards not yet implemented
   return { ...ZERO_INCOME }
 }
 
@@ -1542,7 +1542,7 @@ export interface PassesInputs {
 
 // TODO: Fill in exact Episode Pass and Conquest Pass reward amounts (user to provide)
 export function computePassesIncome(inputs: PassesInputs): IncomeResult {
-  // eslint-disable-line @typescript-eslint/no-unused-vars
+  void inputs // stub — rewards not yet implemented
   return { ...ZERO_INCOME }
 }
 
