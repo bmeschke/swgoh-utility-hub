@@ -177,9 +177,9 @@ const STANDARD_AB_PAYOUTS: Partial<Record<StandardABTier, TierPayout>> = {
     injectorCell: 5,
   },
   CTII: {
-    crystals: 5,
-    greySignalData: 3,
+    greySignalData: 5,
     greenSignalData: 3,
+    blueSignalData: 3,
     carboniteCircuitBoard: 10,
     bronziumWiring: 10,
     chromiumTransistors: 10,
@@ -187,9 +187,9 @@ const STANDARD_AB_PAYOUTS: Partial<Record<StandardABTier, TierPayout>> = {
     electriumConductor: 3,
   },
   CTIII: {
-    crystals: 5,
-    greySignalData: 3,
+    greySignalData: 5,
     greenSignalData: 3,
+    blueSignalData: 3,
     carboniteCircuitBoard: 10,
     bronziumWiring: 10,
     chromiumTransistors: 10,
@@ -220,7 +220,7 @@ const PERIDEA_PATROL_PAYOUTS: Partial<Record<ShortABTier, TierPayout>> = {
     impulseDetector: 2,
     aeromagnifier: 1.33,
   },
-  VI: { crystals: 100, omicron: 1.66, aeromagnifier: 1.66, gyrdaKeypad: 1.66 },
+  VI: { crystals: 100, omicron: 1.66, gyrdaKeypad: 1.66, droidBrain: 1.66 },
 }
 
 const DUEL_OF_THE_FATES_PAYOUTS: Partial<Record<ShortABTier, TierPayout>> = {
@@ -253,7 +253,7 @@ const DUEL_OF_THE_FATES_PAYOUTS: Partial<Record<ShortABTier, TierPayout>> = {
     impulseDetector: 2,
     aeromagnifier: 1.33,
   },
-  VI: { crystals: 100, aeromagnifier: 2.5, gyrdaKeypad: 2.5 },
+  VI: { crystals: 100, gyrdaKeypad: 2.5, droidBrain: 2.5 },
 }
 
 const BATTLE_PAYOUTS: Record<string, Partial<Record<string, TierPayout>>> = {
