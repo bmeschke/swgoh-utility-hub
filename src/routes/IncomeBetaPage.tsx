@@ -19,6 +19,7 @@ import {
   computePassesIncome,
   computeDailyActivitiesIncome,
   computeGalacticWarIncome,
+  computeLoginCalendarIncome,
   type AssaultBattleInputs,
   type GrandArenaInputs,
   type FleetArenaInputs,
@@ -107,6 +108,7 @@ export default function IncomeBetaPage() {
   const breakdown = [
     { label: 'Daily Activities', result: computeDailyActivitiesIncome() },
     { label: 'Galactic War', result: computeGalacticWarIncome() },
+    { label: 'Monthly Login Calendar', result: computeLoginCalendarIncome() },
     ...Object.entries(assaultInputs).map(([name, tier]) => ({
       label: name,
       result: computeSingleAssaultBattleIncome(name, tier),

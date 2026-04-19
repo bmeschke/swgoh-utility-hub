@@ -1549,15 +1549,17 @@ export function computePassesIncome(inputs: PassesInputs): IncomeResult {
 // ─── Fixed Daily Income (assumed, no user input) ──────────────────────────────
 
 // Daily activities + Galactic War + daily login assumed every day
-// - Daily activities: 70 crystals/day + 1 omega/day
+// - Daily activities: 70 crystals/day + 1 omega/day + 3 kyrotech salvage/day (1.5 each on avg)
 // - Galactic War: 25 crystals/day (flat, always)
-// - Daily login rewards are also assumed (crystals vary by day; minimal tracking for now)
+// - Monthly login calendar: ~500 crystals/mo + 1 zeta + 1 omega (April 2025 observed)
 
 export function computeDailyActivitiesIncome(): IncomeResult {
   return {
     ...ZERO_INCOME,
     crystals: 70 * 30, // 2,100/mo
     omega: 1 * 30, // 30/mo
+    kyrotechShockProd: 1.5 * 30, // 45/mo (avg; 3 total kyrotech/day split evenly)
+    kyrotechBattleComputer: 1.5 * 30, // 45/mo
   }
 }
 
@@ -1565,6 +1567,15 @@ export function computeGalacticWarIncome(): IncomeResult {
   return {
     ...ZERO_INCOME,
     crystals: 25 * 30, // 750/mo
+  }
+}
+
+export function computeLoginCalendarIncome(): IncomeResult {
+  return {
+    ...ZERO_INCOME,
+    crystals: 500,
+    zeta: 1,
+    omega: 1,
   }
 }
 

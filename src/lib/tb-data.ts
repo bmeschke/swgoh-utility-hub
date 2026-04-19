@@ -261,7 +261,7 @@ export const TB_MISSIONS: Record<TBType, TBMissionDef[]> = {
     {
       type: 'regular',
       key: 'bracca',
-      label: 'Cere Junda & Cal Kestis',
+      label: 'Cere & Cal (Zeffo Unlock)',
       zone: 'Bracca',
       rewardPerCompletion: { getMk2: 50 },
     },
@@ -275,7 +275,7 @@ export const TB_MISSIONS: Record<TBType, TBMissionDef[]> = {
     {
       type: 'regular',
       key: 'tatooine',
-      label: 'Mandalorians',
+      label: 'Mandalorians (Mandalore Unlock)',
       zone: 'Tatooine',
       rewardPerCompletion: { getMk2: 50 },
     },

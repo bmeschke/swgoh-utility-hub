@@ -38,12 +38,13 @@ export default function IncomeAssumptionsModal() {
           <ul className="space-y-2 text-muted-foreground">
             <li>
               <span className="font-medium text-foreground">Daily Activities</span> — completed
-              every day (+70 crystals/day, +1 Omega/day); includes +25 crystals/day from Galactic
-              War
+              every day (+70 crystals/day, +1 Omega/day, +3 Kyrotech salvage/day); includes +25
+              crystals/day from Galactic War
             </li>
             <li>
-              <span className="font-medium text-foreground">Daily login</span> — login reward
-              claimed every day
+              <span className="font-medium text-foreground">Monthly login calendar</span> — login
+              reward claimed every day; monthly calendar assumed to award ~500 crystals, +1 Zeta,
+              and +1 Omega (based on April 2025; may vary month-to-month)
             </li>
             <li>
               <span className="font-medium text-foreground">Grand Arena</span> — 5 wins + 4 losses
