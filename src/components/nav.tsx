@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom'
 import { SignInButton, UserButton, useAuth } from '@clerk/clerk-react'
 import { Button } from '@/components/ui/button'
+import PatchNotesModal from '@/components/PatchNotesModal'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm transition-colors ${isActive ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`
@@ -27,9 +28,10 @@ export default function Nav() {
             </NavLink>
           )}
         </div>
-        <div>
-          {isLoaded && (
-            isSignedIn ? (
+        <div className="flex items-center gap-2">
+          <PatchNotesModal />
+          {isLoaded &&
+            (isSignedIn ? (
               <UserButton />
             ) : (
               <SignInButton mode="modal">
@@ -37,8 +39,7 @@ export default function Nav() {
                   Sign In
                 </Button>
               </SignInButton>
-            )
-          )}
+            ))}
         </div>
       </div>
     </nav>
