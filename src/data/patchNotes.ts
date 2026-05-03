@@ -7,6 +7,13 @@ export interface PatchNote {
 // Newest entry first.
 export const patchNotes: PatchNote[] = [
   {
+    date: '2026-05-03',
+    title: 'Pack Library Filter by Type',
+    changes: [
+      'Added a "Filter by Type" option to the filter menu — toggle Standard Pack, Ascension Pack, and Slice-A-Bundle visibility independently.',
+    ],
+  },
+  {
     date: '2026-05-02',
     title: 'Pack Library Filtering Improvements',
     changes: [

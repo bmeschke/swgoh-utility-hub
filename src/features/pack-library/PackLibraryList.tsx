@@ -14,6 +14,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import {
   calcDollarValue,
@@ -33,6 +34,16 @@ const VALUE_CATEGORIES: { id: string; label: string; color: string }[] = [
   { id: 'good', label: 'Good', color: 'text-blue-400' },
   { id: 'fair', label: 'Fair', color: 'text-purple-400' },
   { id: 'scam', label: 'Scam', color: 'text-red-400' },
+]
+
+// ── Pack type config ──────────────────────────────────────────────────────────
+
+const ALL_TYPE_IDS = ['standard', 'ascension', 'sab'] as const
+
+const PACK_TYPES: { id: string; label: string }[] = [
+  { id: 'standard', label: 'Standard Pack' },
+  { id: 'ascension', label: 'Ascension Pack' },
+  { id: 'sab', label: 'Slice-A-Bundle' },
 ]
 
 // ── Filter helpers ────────────────────────────────────────────────────────────
@@ -57,6 +68,13 @@ function matchesCategories(pct: number, enabled: Set<string>): boolean {
   if (enabled.has('fair') && pct > 0 && pct < 45) return true
   if (enabled.has('scam') && pct <= 0) return true
   return false
+}
+
+function matchesType(pack: Doc<'packs'>, enabled: Set<string>): boolean {
+  if (enabled.size === 3) return true
+  const type =
+    pack.packType === 'sab' ? 'sab' : pack.packType === 'ascension' ? 'ascension' : 'standard'
+  return enabled.has(type)
 }
 
 function packContainsItem(pack: Doc<'packs'>, itemId: string): boolean {
@@ -88,6 +106,9 @@ export default function PackLibraryList() {
   const enabledCategories: Set<string> = searchParams.has('categories')
     ? new Set(searchParams.get('categories')!.split(',').filter(Boolean))
     : new Set(ALL_CATEGORY_IDS)
+  const enabledTypes: Set<string> = searchParams.has('types')
+    ? new Set(searchParams.get('types')!.split(',').filter(Boolean))
+    : new Set(ALL_TYPE_IDS)
 
   // Local UI state for dropdowns / item search input
   const [valueOpen, setValueOpen] = useState(false)
@@ -113,10 +134,17 @@ export default function PackLibraryList() {
     setParam('categories', next.size === 4 ? null : [...next].join(','))
   }
 
+  function toggleType(id: string) {
+    const next = new Set(enabledTypes)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setParam('types', next.size === 3 ? null : [...next].join(','))
+  }
+
   const selectedItem = items.find((i) => i._id === selectedItemId)
   const filteredItems = items.filter((i) => i.name.toLowerCase().includes(itemSearch.toLowerCase()))
 
-  const isFiltered = search || enabledCategories.size < 4 || selectedItemId
+  const isFiltered = search || enabledCategories.size < 4 || enabledTypes.size < 3 || selectedItemId
 
   if (packs === undefined) {
     return <p className="text-muted-foreground">Loading...</p>
@@ -126,6 +154,7 @@ export default function PackLibraryList() {
     .filter((pack) => {
       if (search && !pack.name.toLowerCase().includes(search.toLowerCase())) return false
       if (!matchesCategories(getPct(pack), enabledCategories)) return false
+      if (!matchesType(pack, enabledTypes)) return false
       if (selectedItemId && !packContainsItem(pack, selectedItemId)) return false
       return true
     })
@@ -167,7 +196,7 @@ export default function PackLibraryList() {
                   aria-label="Filter by value"
                   className={cn(
                     'relative rounded p-1 transition-colors',
-                    enabledCategories.size < 4
+                    enabledCategories.size < 4 || enabledTypes.size < 3
                       ? 'text-foreground'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
@@ -175,11 +204,11 @@ export default function PackLibraryList() {
               }
             >
               <SlidersHorizontalIcon className="size-4" />
-              {enabledCategories.size < 4 && (
+              {(enabledCategories.size < 4 || enabledTypes.size < 3) && (
                 <span className="absolute right-0.5 top-0.5 size-1.5 rounded-full bg-blue-500" />
               )}
             </PopoverTrigger>
-            <PopoverContent className="w-44 p-3" align="end">
+            <PopoverContent className="w-48 p-3" align="end">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Filter by Value
               </p>
@@ -196,6 +225,26 @@ export default function PackLibraryList() {
                       onChange={() => toggleCategory(cat.id)}
                     />
                     <span className={cn('text-sm font-medium', cat.color)}>{cat.label}</span>
+                  </label>
+                ))}
+              </div>
+              <Separator className="my-3" />
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Filter by Type
+              </p>
+              <div className="space-y-1.5">
+                {PACK_TYPES.map((type) => (
+                  <label
+                    key={type.id}
+                    className="flex cursor-pointer select-none items-center gap-2"
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-3.5"
+                      checked={enabledTypes.has(type.id)}
+                      onChange={() => toggleType(type.id)}
+                    />
+                    <span className="text-sm">{type.label}</span>
                   </label>
                 ))}
               </div>
