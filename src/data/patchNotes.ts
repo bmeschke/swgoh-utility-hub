@@ -7,6 +7,15 @@ export interface PatchNote {
 // Newest entry first.
 export const patchNotes: PatchNote[] = [
   {
+    date: '2026-05-08',
+    title: 'Item Values Modal Improvements',
+    changes: [
+      'Added explanations for what the % value means, with a color-coded breakdown of value categories (Excellent, Good, Fair, Scam) and their thresholds.',
+      'Added explanations for Standard Value and Holiday Value, including the crystal-per-dollar rates used (165✦ standard, 212✦ holiday).',
+      'Value category filter labels now show their percent ranges (e.g. "Good (+45% - 144%)").',
+    ],
+  },
+  {
     date: '2026-05-03',
     title: 'Pack Library Filter by Type',
     changes: [

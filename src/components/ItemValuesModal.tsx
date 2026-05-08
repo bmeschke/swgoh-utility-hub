@@ -136,6 +136,52 @@ export default function ItemValuesModal() {
           </DialogDescription>
         </DialogHeader>
         <div className="overflow-y-auto flex-1 pr-1">
+          <div className="space-y-4 pb-4 text-sm">
+            <Separator />
+            <div>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                What does the % value mean?
+              </p>
+              <p className="text-muted-foreground">
+                The % value compares a pack's total crystal value against its price in crystals. A
+                pack worth more than it costs is a positive value; one worth less is negative.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                <span className="font-medium text-foreground">Example:</span> a pack that costs
+                1,000✦ but contains items worth 2,000✦ is{' '}
+                <span className="text-blue-400 font-medium">+100% — Good</span>.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                <span className="font-medium text-foreground">Value categories:</span>{' '}
+                <span className="font-medium text-green-400">Excellent (≥+145%)</span>,{' '}
+                <span className="font-medium text-blue-400">Good (+45% - 144%)</span>,{' '}
+                <span className="font-medium text-purple-400">Fair (+1% - 44%)</span>,{' '}
+                <span className="font-medium text-red-400">Scam (≤0%)</span>
+              </p>
+            </div>
+            <Separator />
+            <div>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Standard value vs. holiday value
+              </p>
+              <p className="text-muted-foreground">
+                Both values answer the same question: given a pack's total crystal value, what would
+                it cost in dollars to buy that many crystals outright? They differ only in the
+                exchange rate used.
+              </p>
+              <ul className="mt-2 space-y-1 text-muted-foreground">
+                <li>
+                  <span className="font-medium text-foreground">Standard value</span> — crystals at
+                  165✦ per dollar, the year-round rate.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">Holiday value</span> — crystals at
+                  212✦ per dollar, the discounted rate during sale events (New Year's, Star Wars
+                  Day, etc.).
+                </li>
+              </ul>
+            </div>
+          </div>
           <ItemValuesContent />
         </div>
       </DialogContent>

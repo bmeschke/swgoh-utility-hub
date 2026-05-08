@@ -47,6 +47,11 @@ export default function IncomeAssumptionsModal() {
               and +1 Omega (based on April 2025; may vary month-to-month)
             </li>
             <li>
+              <span className="font-medium text-foreground">Omega Battles</span> — 8 events per
+              month (twice per week); each awards +10 Omegas and +3 Zetas (+80 Omegas and +24
+              Zetas/month total)
+            </li>
+            <li>
               <span className="font-medium text-foreground">Grand Arena</span> — 5 wins + 4 losses
               per season, always finishing 2nd–4th place
             </li>

@@ -1579,6 +1579,14 @@ export function computeLoginCalendarIncome(): IncomeResult {
   }
 }
 
+export function computeOmegaBattlesIncome(): IncomeResult {
+  return {
+    ...ZERO_INCOME,
+    omega: 10 * 8, // 80/mo (8 events/mo × 10 omegas each)
+    zeta: 3 * 8, // 24/mo (8 events/mo × 3 zetas each)
+  }
+}
+
 /** Convenience: sum of all fixed daily sources (daily activities + Galactic War) */
 export function computeFixedDailyIncome(): IncomeResult {
   return sumIncome(computeDailyActivitiesIncome(), computeGalacticWarIncome())

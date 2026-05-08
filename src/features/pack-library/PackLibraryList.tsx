@@ -30,10 +30,10 @@ import { SearchIcon, XIcon, SlidersHorizontalIcon, PackageIcon } from 'lucide-re
 const ALL_CATEGORY_IDS = ['excellent', 'good', 'fair', 'scam'] as const
 
 const VALUE_CATEGORIES: { id: string; label: string; color: string }[] = [
-  { id: 'excellent', label: 'Excellent', color: 'text-green-400' },
-  { id: 'good', label: 'Good', color: 'text-blue-400' },
-  { id: 'fair', label: 'Fair', color: 'text-purple-400' },
-  { id: 'scam', label: 'Scam', color: 'text-red-400' },
+  { id: 'excellent', label: 'Excellent (≥+145%)', color: 'text-green-400' },
+  { id: 'good', label: 'Good (+45% - 144%)', color: 'text-blue-400' },
+  { id: 'fair', label: 'Fair (+1% - 44%)', color: 'text-purple-400' },
+  { id: 'scam', label: 'Scam (≤0%)', color: 'text-red-400' },
 ]
 
 // ── Pack type config ──────────────────────────────────────────────────────────
