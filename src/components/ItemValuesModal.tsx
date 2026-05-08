@@ -135,7 +135,7 @@ export default function ItemValuesModal() {
             quantity.
           </DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto flex-1 pr-1">
+        <div className="overflow-y-auto flex-1 pr-4">
           <div className="space-y-4 pb-4 text-sm">
             <Separator />
             <div>
