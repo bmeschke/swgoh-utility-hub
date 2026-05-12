@@ -16,9 +16,9 @@ import NotFoundPage from '@/routes/NotFoundPage'
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col overflow-x-hidden">
         <Nav />
-        <main className="flex-1">
+        <main className="flex-1 min-w-0 overflow-x-hidden">
           <Routes>
             <Route path="/" element={<Navigate to="/pack-library" replace />} />
             <Route path="/pack-library" element={<PackLibraryPage />} />

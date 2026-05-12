@@ -107,7 +107,7 @@ function BreakdownContent({
   return (
     <div
       className="min-w-[230px] text-xs grid gap-x-4"
-      style={{ gridTemplateColumns: '1fr auto auto' }}
+      style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto' }}
     >
       <span className="pb-1.5 border-b border-border font-medium text-muted-foreground">
         Source
@@ -170,7 +170,10 @@ function TotalsSection({
         {heading}
       </div>
       {/* Flat grid: exactly 3 direct children per row via React.Fragment */}
-      <div className="grid gap-y-0.5 text-sm" style={{ gridTemplateColumns: '1fr auto auto' }}>
+      <div
+        className="grid gap-y-0.5 text-sm"
+        style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto' }}
+      >
         {rows.map(({ key, label }) => {
           const monthly = totals[key]
           const contributing = breakdown?.filter((s) => s.result[key] > 0) ?? []
@@ -244,7 +247,7 @@ function SectionHeader() {
   return (
     <div
       className="grid gap-y-0.5 text-xs text-muted-foreground font-medium mb-1"
-      style={{ gridTemplateColumns: '1fr auto auto' }}
+      style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto' }}
     >
       <span />
       <span className="text-right pr-3">Monthly</span>

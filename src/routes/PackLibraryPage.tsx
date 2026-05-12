@@ -3,8 +3,8 @@ import ItemValuesModal from '@/components/ItemValuesModal'
 
 export default function PackLibraryPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="flex items-start justify-between gap-4">
+    <div className="mx-auto max-w-6xl px-3 py-6 sm:px-4 sm:py-8">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div>
           <h1 className="text-2xl font-bold">Pack Value Library</h1>
           <p className="mt-1 text-sm text-muted-foreground">

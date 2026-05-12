@@ -150,8 +150,8 @@ export default function IncomeBetaPage() {
   const total = sumIncome(...breakdown.map((s) => s.result))
 
   return (
-    <div className="mx-auto max-w-5xl p-6 space-y-6">
-      <div className="flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-5xl px-3 py-6 sm:px-6 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-bold">Income Calculator</h1>
         </div>
