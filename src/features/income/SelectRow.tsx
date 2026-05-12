@@ -10,6 +10,8 @@ export interface SelectRowProps {
   label: string
   /** Small muted text shown after the label (e.g. "2×/mo") */
   sublabel?: string
+  /** Optional second line shown below the label row in smaller muted text */
+  description?: string
   value: string
   /** Override the SelectValue trigger text when the stored value key ≠ display label */
   displayValue?: string
@@ -24,6 +26,7 @@ export interface SelectRowProps {
 export default function SelectRow({
   label,
   sublabel,
+  description,
   value,
   displayValue,
   onValueChange,
@@ -36,8 +39,11 @@ export default function SelectRow({
       className={`flex items-center justify-between gap-3 rounded border p-2${disabled ? ' opacity-50' : ''}`}
     >
       <div className="min-w-0">
-        <span className="text-sm font-medium">{label}</span>
-        {sublabel && <span className="ml-1.5 text-xs text-muted-foreground">{sublabel}</span>}
+        <div>
+          <span className="text-sm font-medium">{label}</span>
+          {sublabel && <span className="ml-1.5 text-xs text-muted-foreground">{sublabel}</span>}
+        </div>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
 
       {disabled ? (

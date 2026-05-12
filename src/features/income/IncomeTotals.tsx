@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import type { IncomeResult } from '@/lib/income'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
@@ -154,6 +154,17 @@ function TotalsSection({
   totals: IncomeResult
   breakdown?: IncomeSource[]
 }) {
+  const [clickOpenKey, setClickOpenKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!clickOpenKey) return
+    function close() {
+      setClickOpenKey(null)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [clickOpenKey])
+
   return (
     <div>
       <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
@@ -181,6 +192,7 @@ function TotalsSection({
           }
 
           // Rows with multiple sources get a tooltip on all three cells
+          const isClickOpen = clickOpenKey === key
           const tooltipContent = (
             <TooltipContent
               side="right"
@@ -192,8 +204,18 @@ function TotalsSection({
           )
           return (
             <React.Fragment key={key}>
-              <Tooltip>
-                <TooltipTrigger render={<span className="pr-4 cursor-help w-fit" />}>
+              <Tooltip open={isClickOpen ? true : undefined}>
+                <TooltipTrigger
+                  render={
+                    <span
+                      className="pr-4 cursor-help w-fit"
+                      onPointerDown={(e) => {
+                        e.stopPropagation()
+                        setClickOpenKey(isClickOpen ? null : key)
+                      }}
+                    />
+                  }
+                >
                   {label}
                 </TooltipTrigger>
                 {tooltipContent}
@@ -248,7 +270,7 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
     <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-sm font-semibold text-foreground">Monthly &amp; Daily Totals</span>
-        <span className="text-xs text-muted-foreground">Hover over any item to see sources</span>
+        <span className="text-xs text-muted-foreground">Hover or tap any item to see sources</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
