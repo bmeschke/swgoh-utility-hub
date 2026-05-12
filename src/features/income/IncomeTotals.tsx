@@ -90,9 +90,9 @@ const DATACRON_ROWS: { key: keyof IncomeResult; label: string }[] = [
   { key: 'mk3DatacronReroll', label: 'Mk 3 Datacron Reroll Material' },
 ]
 
-// ─── Breakdown tooltip content ─────────────────────────────────────────────
+// ─── Breakdown content ─────────────────────────────────────────────────────
 
-function BreakdownTooltip({
+function BreakdownContent({
   rowKey,
   sources,
   total,
@@ -109,7 +109,6 @@ function BreakdownTooltip({
       className="min-w-[230px] text-xs grid gap-x-4"
       style={{ gridTemplateColumns: '1fr auto auto' }}
     >
-      {/* Header */}
       <span className="pb-1.5 border-b border-border font-medium text-muted-foreground">
         Source
       </span>
@@ -120,7 +119,6 @@ function BreakdownTooltip({
         Daily avg
       </span>
 
-      {/* Per-source rows */}
       {contributing.map((s) => {
         const mo = s.result[rowKey]
         return (
@@ -134,7 +132,6 @@ function BreakdownTooltip({
         )
       })}
 
-      {/* Total row */}
       <span className="pt-1.5 mt-0.5 border-t border-border font-medium">Total</span>
       <span className="pt-1.5 mt-0.5 border-t border-border font-medium text-right tabular-nums">
         {fmt(total)}
@@ -155,6 +152,8 @@ function TotalsSection({
   breakdown,
   openKey,
   onOpen,
+  hoverKey,
+  onHover,
 }: {
   heading: string
   rows: { key: keyof IncomeResult; label: string }[]
@@ -162,20 +161,22 @@ function TotalsSection({
   breakdown?: IncomeSource[]
   openKey: string | null
   onOpen: (key: string | null) => void
+  hoverKey: string | null
+  onHover: (key: string | null) => void
 }) {
   return (
     <div>
       <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
         {heading}
       </div>
-      {/* Flat grid: 3 direct children per row via React.Fragment */}
+      {/* Flat grid: exactly 3 direct children per row via React.Fragment */}
       <div className="grid gap-y-0.5 text-sm" style={{ gridTemplateColumns: '1fr auto auto' }}>
         {rows.map(({ key, label }) => {
           const monthly = totals[key]
           const contributing = breakdown?.filter((s) => s.result[key] > 0) ?? []
-          const hasTooltip = contributing.length >= 1
+          const hasBreakdown = contributing.length >= 1
 
-          if (!hasTooltip) {
+          if (!hasBreakdown) {
             return (
               <React.Fragment key={key}>
                 <span className="text-foreground pr-4">{label}</span>
@@ -189,22 +190,20 @@ function TotalsSection({
             )
           }
 
-          // One controlled Tooltip on the label cell drives open/close for
-          // both desktop hover and mobile tap. Monthly and daily cells trigger
-          // the same open state on tap but have no Tooltip of their own —
-          // this prevents multiple popups appearing simultaneously.
-          const isOpen = openKey === key
-          const handlePointerDown = (e: React.PointerEvent) => {
-            e.stopPropagation()
-            onOpen(isOpen ? null : key)
-          }
+          // The tooltip anchors to a content-width trigger so the arrow appears
+          // right after the label text. Desktop: hover opens it. Mobile: tap toggles it.
+          const isOpen = hoverKey === key || openKey === key
+          const toggle = () => onOpen(openKey === key ? null : key)
+
           return (
             <React.Fragment key={key}>
-              <Tooltip open={isOpen ? true : undefined}>
+              <Tooltip open={isOpen} onOpenChange={() => {}}>
                 <TooltipTrigger
-                  render={
-                    <span className="pr-4 cursor-help w-fit" onPointerDown={handlePointerDown} />
-                  }
+                  className="text-foreground text-sm text-left pr-4 cursor-help bg-transparent border-0 p-0 justify-self-start"
+                  onMouseEnter={() => onHover(key)}
+                  onMouseLeave={() => onHover(null)}
+                  onClick={toggle}
+                  data-income-row={key}
                 >
                   {label}
                 </TooltipTrigger>
@@ -212,23 +211,22 @@ function TotalsSection({
                   side="right"
                   sideOffset={8}
                   className="!bg-card !text-card-foreground border border-border shadow-lg px-3 py-2.5 max-w-none"
-                  onPointerDown={(e) => {
-                    e.stopPropagation()
-                    onOpen(null)
-                  }}
                 >
-                  <BreakdownTooltip rowKey={key} sources={breakdown!} total={monthly} />
+                  <BreakdownContent rowKey={key} sources={breakdown!} total={monthly} />
                 </TooltipContent>
               </Tooltip>
+              {/* Monthly and daily also toggle on mobile tap */}
               <span
                 className="text-right tabular-nums whitespace-nowrap pr-3 cursor-help"
-                onPointerDown={handlePointerDown}
+                data-income-row={key}
+                onClick={toggle}
               >
                 {fmt(monthly)}
               </span>
               <span
                 className="text-right tabular-nums whitespace-nowrap text-muted-foreground cursor-help"
-                onPointerDown={handlePointerDown}
+                data-income-row={key}
+                onClick={toggle}
               >
                 ~{fmt(daily(monthly))}/day
               </span>
@@ -259,16 +257,32 @@ function SectionHeader() {
 
 export default function IncomeTotals({ totals, breakdown }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null)
+  const [hoverKey, setHoverKey] = useState<string | null>(null)
 
-  // Close when tapping anywhere outside a trigger
+  // Mobile: close the breakdown when the user taps outside the row or tooltip
   useEffect(() => {
     if (!openKey) return
-    function close() {
-      setOpenKey(null)
+    const close = (e: TouchEvent) => {
+      const target = e.target as Element
+      if (
+        !target.closest('[data-income-row]') &&
+        !target.closest('[data-slot="tooltip-content"]')
+      ) {
+        setOpenKey(null)
+      }
     }
-    document.addEventListener('pointerdown', close)
-    return () => document.removeEventListener('pointerdown', close)
+    document.addEventListener('touchstart', close, { passive: true })
+    return () => document.removeEventListener('touchstart', close, { passive: true })
   }, [openKey])
+
+  const sectionProps = {
+    totals,
+    breakdown,
+    openKey,
+    onOpen: setOpenKey,
+    hoverKey,
+    onHover: setHoverKey,
+  }
 
   return (
     <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
@@ -281,63 +295,21 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
         {/* Left column: Currency + Ability Mats + Mod Mats */}
         <div className="space-y-4">
           <SectionHeader />
-          <TotalsSection
-            heading="Currency"
-            rows={CURRENCY_ROWS}
-            totals={totals}
-            breakdown={breakdown}
-            openKey={openKey}
-            onOpen={setOpenKey}
-          />
+          <TotalsSection heading="Currency" rows={CURRENCY_ROWS} {...sectionProps} />
           <div className="border-t" />
-          <TotalsSection
-            heading="Ability Materials"
-            rows={ABILITY_ROWS}
-            totals={totals}
-            breakdown={breakdown}
-            openKey={openKey}
-            onOpen={setOpenKey}
-          />
+          <TotalsSection heading="Ability Materials" rows={ABILITY_ROWS} {...sectionProps} />
           <div className="border-t" />
-          <TotalsSection
-            heading="Mod Materials"
-            rows={MOD_ROWS}
-            totals={totals}
-            breakdown={breakdown}
-            openKey={openKey}
-            onOpen={setOpenKey}
-          />
+          <TotalsSection heading="Mod Materials" rows={MOD_ROWS} {...sectionProps} />
         </div>
 
         {/* Right column: Gear + Relic Materials + Datacron Materials */}
         <div className="space-y-4">
           <SectionHeader />
-          <TotalsSection
-            heading="Gear"
-            rows={GEAR_ROWS}
-            totals={totals}
-            breakdown={breakdown}
-            openKey={openKey}
-            onOpen={setOpenKey}
-          />
+          <TotalsSection heading="Gear" rows={GEAR_ROWS} {...sectionProps} />
           <div className="border-t" />
-          <TotalsSection
-            heading="Relic Materials"
-            rows={RELIC_MAT_ROWS}
-            totals={totals}
-            breakdown={breakdown}
-            openKey={openKey}
-            onOpen={setOpenKey}
-          />
+          <TotalsSection heading="Relic Materials" rows={RELIC_MAT_ROWS} {...sectionProps} />
           <div className="border-t" />
-          <TotalsSection
-            heading="Datacron Materials"
-            rows={DATACRON_ROWS}
-            totals={totals}
-            breakdown={breakdown}
-            openKey={openKey}
-            onOpen={setOpenKey}
-          />
+          <TotalsSection heading="Datacron Materials" rows={DATACRON_ROWS} {...sectionProps} />
         </div>
       </div>
     </div>
