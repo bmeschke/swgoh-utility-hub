@@ -21,10 +21,18 @@ export interface IncomeResult {
   // Gear - Kyrotech Salvage
   kyrotechShockProd: number
   kyrotechBattleComputer: number
+  // Gear - Kyrotech Full Items (2800c each)
+  kyrotechShockProdItem: number
+  kyrotechBattleComputerItem: number
+  kyrotechPowerConverterItem: number
   // Gear - Finisher Salvage
   injectorHead: number
   injectorHandle: number
   injectorCell: number
+  // Gear - G12 Salvage (grouped: Mk 5 A-KT, Mk 5 Arakyd, Mk 3 Czerka, etc.)
+  gearG12Salvage: number
+  // Gear - G12+ Salvage (grouped: Mk 12 ArmaTek/Czerka Prototype Salvage)
+  gearG12PlusSalvage: number
   // Gear - Signal Data
   greySignalData: number
   greenSignalData: number
@@ -79,9 +87,14 @@ export const ZERO_INCOME: IncomeResult = {
   omicron: 0,
   kyrotechShockProd: 0,
   kyrotechBattleComputer: 0,
+  kyrotechShockProdItem: 0,
+  kyrotechBattleComputerItem: 0,
+  kyrotechPowerConverterItem: 0,
   injectorHead: 0,
   injectorHandle: 0,
   injectorCell: 0,
+  gearG12Salvage: 0,
+  gearG12PlusSalvage: 0,
   greySignalData: 0,
   greenSignalData: 0,
   blueSignalData: 0,
@@ -1339,47 +1352,308 @@ export function computeTerritoryBattleIncome(inputs: TerritoryBattleInputs): Inc
 }
 
 // ─── Conquest ─────────────────────────────────────────────────────────────────
+// Track rewards: CUMULATIVE — user gets all track rewards from crate 1 through their crate tier.
+// Crate rewards: EXCLUSIVE — user gets only the one crate they complete.
+// Crate reward data: Hard mode only. Easy/Normal crate data not yet available.
+// Conquest Pass paid track rewards are included if conquestPass = true.
 
 export interface ConquestInputs {
   mode: 'Easy' | 'Normal' | 'Hard'
   crateTier: number // 1–7
 }
 
-export const CONQUEST_EASY_CRATE_LABELS: Record<number, string> = {
-  1: 'Crate 1',
-  2: 'Crate 2',
-  3: 'Crate 3',
-  4: 'Crate 4',
-  5: 'Crate 5',
-  6: 'Crate 6',
-  7: 'Crate 7 (Max)',
+const CONQUEST_CRATE_LABELS: Record<number, string> = {
+  1: 'Crate 1 (100 keycards)',
+  2: 'Crate 2 (165 keycards)',
+  3: 'Crate 3 (230 keycards)',
+  4: 'Crate 4 (365 keycards)',
+  5: 'Crate 5 (450 keycards)',
+  6: 'Crate 6 (530 keycards)',
+  7: 'Crate 7 (630 keycards)',
 }
 
-export const CONQUEST_NORMAL_CRATE_LABELS: Record<number, string> = {
-  1: 'Crate 1',
-  2: 'Crate 2',
-  3: 'Crate 3',
-  4: 'Crate 4',
-  5: 'Crate 5',
-  6: 'Crate 6',
-  7: 'Crate 7 (Max)',
+export const CONQUEST_EASY_CRATE_LABELS = CONQUEST_CRATE_LABELS
+export const CONQUEST_NORMAL_CRATE_LABELS = CONQUEST_CRATE_LABELS
+export const CONQUEST_HARD_CRATE_LABELS = CONQUEST_CRATE_LABELS
+
+/** Build a full IncomeResult from a sparse partial (zeros for all missing keys). */
+function partialToIncome(partial: Partial<IncomeResult>): IncomeResult {
+  const result = { ...ZERO_INCOME }
+  for (const [key, value] of Object.entries(partial)) {
+    ;(result as Record<string, number>)[key] = value ?? 0
+  }
+  return result
 }
 
-export const CONQUEST_HARD_CRATE_LABELS: Record<number, string> = {
-  1: 'Crate 1',
-  2: 'Crate 2',
-  3: 'Crate 3',
-  4: 'Crate 4',
-  5: 'Crate 5',
-  6: 'Crate 6',
-  7: 'Crate 7 (Max)',
+// Free track rewards per milestone crate (cumulative: sum crates 1..selectedTier)
+// Skipped items (no IncomeResult field): none
+const CONQUEST_FREE_TRACK: Record<number, Partial<IncomeResult>> = {
+  1: { twDataCache: 250000, mk1Amplifier: 10 },
+  2: { twDataCache: 125000, mk1DatacronMat: 15, mk2DatacronMat: 15, mk1Amplifier: 10 },
+  3: { mk1DatacronMat: 15, mk2DatacronMat: 15 },
+  4: {
+    twDataCache: 500000,
+    mk1DatacronMat: 15,
+    mk2DatacronMat: 30,
+    mk1Capacitor: 20,
+    mk2PulseModulator: 10,
+  },
+  5: { twDataCache: 250000, mk1DatacronMat: 25, mk2DatacronMat: 15, mk2CircuitBreaker: 10 },
+  6: { twDataCache: 250000, mk2CircuitBreaker: 10, mk2PulseModulator: 10, omicron: 1 },
+  7: { mk2PulseModulator: 10, mk2CircuitBreaker: 10, omicron: 1, mk3DatacronMat: 15 },
 }
 
-// TODO: Fill in signal data amounts per crate tier for Normal and Hard modes
-// Rewards are ZERO until confirmed data is provided
+// Paid track rewards per milestone crate (cumulative; requires conquest pass)
+// Skipped (Gear - Purple, no field yet): Mk 5 A-KT Stun Gun Prototype Salvage (crate 1: 10),
+//   Mk 5 Arakyd Droid Caller Salvage (crate 1: 10), Mk 3 Czerka Stun Cuffs Salvage (crate 1: 5, crate 3: 5)
+const CONQUEST_PAID_TRACK: Record<number, Partial<IncomeResult>> = {
+  1: {
+    omicron: 2,
+    mk1DatacronMat: 45,
+    mk2DatacronMat: 45,
+    mk3DatacronMat: 25,
+    twDataCache: 375000,
+  },
+  2: { mk2DatacronMat: 40 },
+  3: { mk3DatacronMat: 20, twDataCache: 750000 },
+  4: { mk2DatacronMat: 55, twDataCache: 750000, mk3DatacronMat: 20 },
+  5: { twDataCache: 750000, mk3DatacronMat: 20 },
+  6: { twDataCache: 750000, mk3DatacronMat: 30 },
+  // No paid track entry for crate 7
+}
+
+// Hard crate rewards (exclusive: only the one crate the user completed)
+// G12 salvage per crate (6 Czerka Mk12 + 8 ArmaTek Mk12 — all Gear - G12):
+//   Crates 1–5: 6×2.5 + 8×3.75 = 15 + 30 = 45
+//   Crates 6–7: 6×1.3 + 8×1.9 = 7.8 + 15.2 = 23
+// G12+ salvage per crate (6 ArmaTek Mk12 — all Gear - G12+):
+//   Crates 1–5: 6×2.5 = 15
+//   Crates 6–7: 6×1.3 = 7.8
+const CONQUEST_HARD_CRATES: Record<number, Partial<IncomeResult>> = {
+  1: {
+    greySignalData: 20,
+    greenSignalData: 20,
+    chromiumTransistors: 20,
+    bronziumWiring: 40,
+    carboniteCircuitBoard: 15,
+    mk1DatacronMat: 10,
+    mk2DatacronMat: 35,
+    mk3DatacronMat: 15,
+    injectorCell: 16.65,
+    injectorHandle: 16.65,
+    injectorHead: 16.65,
+    twDataCache: 800000,
+    omega: 10,
+    zeta: 5,
+    mk1Amplifier: 24,
+    mk1Capacitor: 40,
+    thermalExchange: 50,
+    mk2CircuitBreaker: 50,
+    microprocessor: 5,
+    variableResistor: 20,
+    mk2PulseModulator: 10,
+    gearG12Salvage: 45,
+    gearG12PlusSalvage: 15,
+  },
+  2: {
+    greySignalData: 20,
+    greenSignalData: 20,
+    chromiumTransistors: 20,
+    bronziumWiring: 40,
+    carboniteCircuitBoard: 15,
+    mk1DatacronMat: 10,
+    mk2DatacronMat: 45,
+    mk3DatacronMat: 15,
+    injectorCell: 16.65,
+    injectorHandle: 16.65,
+    injectorHead: 16.65,
+    twDataCache: 900000,
+    omega: 10,
+    zeta: 5,
+    mk1Amplifier: 30,
+    mk1Capacitor: 40,
+    mk2PulseModulator: 15,
+    mk2CircuitBreaker: 50,
+    thermalExchange: 50,
+    variableResistor: 30,
+    microprocessor: 10,
+    gearG12Salvage: 45,
+    gearG12PlusSalvage: 15,
+  },
+  3: {
+    greySignalData: 15,
+    greenSignalData: 15,
+    blueSignalData: 10,
+    aurodiumHeatsink: 20,
+    chromiumTransistors: 15,
+    bronziumWiring: 25,
+    carboniteCircuitBoard: 10,
+    mk1DatacronMat: 10,
+    mk2DatacronMat: 55,
+    mk3DatacronMat: 30,
+    injectorCell: 8.3,
+    injectorHandle: 8.3,
+    injectorHead: 8.3,
+    twDataCache: 1000000,
+    omega: 10,
+    zeta: 5,
+    mk1Amplifier: 30,
+    mk1Capacitor: 50,
+    mk2PulseModulator: 20,
+    mk2CircuitBreaker: 50,
+    thermalExchange: 50,
+    variableResistor: 40,
+    microprocessor: 15,
+    gearG12Salvage: 45,
+    gearG12PlusSalvage: 15,
+  },
+  4: {
+    greySignalData: 15,
+    greenSignalData: 15,
+    blueSignalData: 10,
+    aurodiumHeatsink: 20,
+    chromiumTransistors: 15,
+    bronziumWiring: 25,
+    carboniteCircuitBoard: 10,
+    mk1DatacronMat: 10,
+    mk2DatacronMat: 55,
+    mk3DatacronMat: 30,
+    injectorCell: 8.3,
+    injectorHandle: 8.3,
+    injectorHead: 8.3,
+    twDataCache: 1100000,
+    omega: 10,
+    zeta: 5,
+    mk1Amplifier: 30,
+    mk1Capacitor: 50,
+    mk2PulseModulator: 20,
+    mk2CircuitBreaker: 50,
+    thermalExchange: 50,
+    variableResistor: 50,
+    microprocessor: 20,
+    gearG12Salvage: 45,
+    gearG12PlusSalvage: 15,
+  },
+  5: {
+    greySignalData: 10,
+    greenSignalData: 10,
+    blueSignalData: 10,
+    aeromagnifier: 2,
+    electriumConductor: 10,
+    aurodiumHeatsink: 15,
+    chromiumTransistors: 15,
+    bronziumWiring: 20,
+    carboniteCircuitBoard: 10,
+    mk1DatacronMat: 10,
+    mk2DatacronMat: 45,
+    mk3DatacronMat: 40,
+    injectorCell: 8.3,
+    injectorHandle: 8.3,
+    injectorHead: 8.3,
+    twDataCache: 1200000,
+    omega: 10,
+    zeta: 5,
+    mk1Amplifier: 30,
+    mk1Capacitor: 50,
+    mk2PulseModulator: 20,
+    mk2CircuitBreaker: 50,
+    thermalExchange: 50,
+    variableResistor: 50,
+    microprocessor: 25,
+    gearG12Salvage: 45,
+    gearG12PlusSalvage: 15,
+  },
+  6: {
+    greySignalData: 10,
+    greenSignalData: 10,
+    blueSignalData: 10,
+    aeromagnifier: 5,
+    zinbiddleCard: 5,
+    electriumConductor: 5,
+    aurodiumHeatsink: 10,
+    chromiumTransistors: 5,
+    bronziumWiring: 10,
+    carboniteCircuitBoard: 10,
+    mk1DatacronMat: 10,
+    mk2DatacronMat: 45,
+    mk3DatacronMat: 40,
+    injectorCell: 8.3,
+    injectorHandle: 8.3,
+    injectorHead: 8.3,
+    twDataCache: 1300000,
+    omega: 10,
+    zeta: 5,
+    mk1Amplifier: 30,
+    mk1Capacitor: 50,
+    mk2PulseModulator: 20,
+    mk2CircuitBreaker: 50,
+    thermalExchange: 50,
+    variableResistor: 50,
+    microprocessor: 30,
+    gearG12Salvage: 23,
+    gearG12PlusSalvage: 7.8,
+  },
+  7: {
+    greySignalData: 10,
+    greenSignalData: 10,
+    blueSignalData: 10,
+    aeromagnifier: 10,
+    zinbiddleCard: 5,
+    electriumConductor: 5,
+    aurodiumHeatsink: 10,
+    chromiumTransistors: 5,
+    bronziumWiring: 10,
+    carboniteCircuitBoard: 10,
+    mk1DatacronMat: 10,
+    mk2DatacronMat: 35,
+    mk3DatacronMat: 50,
+    injectorCell: 8.3,
+    injectorHandle: 8.3,
+    injectorHead: 8.3,
+    twDataCache: 1400000,
+    omega: 10,
+    zeta: 5,
+    mk1Amplifier: 30,
+    mk1Capacitor: 50,
+    mk2PulseModulator: 20,
+    mk2CircuitBreaker: 50,
+    thermalExchange: 50,
+    variableResistor: 50,
+    microprocessor: 30,
+    gearG12Salvage: 23,
+    gearG12PlusSalvage: 7.8,
+  },
+}
+
+/** Free conquest track + Hard crate reward (no pass required). */
 export function computeConquestIncome(inputs: ConquestInputs): IncomeResult {
-  void inputs // stub — rewards not yet implemented
-  return { ...ZERO_INCOME }
+  const { mode, crateTier } = inputs
+
+  // Free track: cumulative for crates 1..crateTier
+  const freeTrack = sumIncome(
+    ...Array.from({ length: crateTier }, (_, i) =>
+      partialToIncome(CONQUEST_FREE_TRACK[i + 1] ?? {})
+    )
+  )
+
+  // Crate rewards: Hard mode only, exclusive for the selected crateTier
+  const crateRewards =
+    mode === 'Hard' ? partialToIncome(CONQUEST_HARD_CRATES[crateTier] ?? {}) : { ...ZERO_INCOME }
+
+  return sumIncome(freeTrack, crateRewards)
+}
+
+/** Conquest paid track rewards (requires conquest pass). Returns ZERO if pass not owned. */
+export function computeConquestPassIncome(
+  inputs: ConquestInputs,
+  conquestPass: boolean
+): IncomeResult {
+  if (!conquestPass) return { ...ZERO_INCOME }
+  return sumIncome(
+    ...Array.from({ length: inputs.crateTier }, (_, i) =>
+      partialToIncome(CONQUEST_PAID_TRACK[i + 1] ?? {})
+    )
+  )
 }
 
 // ─── Special Events ───────────────────────────────────────────────────────────
@@ -1533,17 +1807,66 @@ export function computeSpecialEventsIncome(inputs: SpecialEventsInputs): IncomeR
   )
 }
 
-// ─── Passes ───────────────────────────────────────────────────────────────────
+// ─── Episode Track & Passes ──────────────────────────────────────────────────
+// The free episode track is always assumed fully completed (level 50).
+// The paid episode track is added only if the Premium Episode Pass is purchased.
+// Conquest pass paid-track rewards are handled inside computeConquestIncome.
+//
+// Counts use the per-episode average (Avg column from EraPass.csv); one episode per month assumed.
+// Skipped items (no IncomeResult field): ArmaTek Multi-tool Prototype Salvage,
+//   Kyrotech Power Converter.
 
 export interface PassesInputs {
   episodePass: boolean
   conquestPass: boolean
 }
 
-// TODO: Fill in exact Episode Pass and Conquest Pass reward amounts (user to provide)
+const EPISODE_FREE_TRACK: Partial<IncomeResult> = {
+  carboniteCircuitBoard: 160,
+  mk1Capacitor: 160,
+  mk1Amplifier: 48,
+  greySignalData: 75,
+  variableResistor: 120,
+  kyrotechBattleComputer: 12, // Battle Computer Prototype Salvage
+  bronziumWiring: 160,
+  thermalExchange: 256,
+  microprocessor: 48,
+  mk2CircuitBreaker: 160,
+  mk2PulseModulator: 80,
+  kyrotechShockProd: 12, // Kyrotech Shock Prod Proto Salvage
+  greenSignalData: 65,
+  chromiumTransistors: 120,
+  blueSignalData: 15,
+  aurodiumHeatsink: 26.67,
+  omicron: 4,
+  injectorCell: 13.33,
+  injectorHead: 13.33,
+  injectorHandle: 13.33,
+  gearG12Salvage: 10, // ArmaTek Multi-tool Prototype Salvage (~10/mo avg) — Gear - G12
+}
+
+const EPISODE_PAID_TRACK: Partial<IncomeResult> = {
+  gyrdaKeypad: 5,
+  aeromagnifier: 10,
+  zeta: 10,
+  zinbiddleCard: 15,
+  impulseDetector: 10,
+  omicron: 10,
+  droidBrain: 5,
+  kyrotechShockProdItem: 1, // Kyrotech Shock Prod (full item, 2800c) — not salvage
+  kyrotechBattleComputerItem: 1, // Kyrotech Battle Comp (full item, 2800c) — not salvage
+  kyrotechPowerConverterItem: 1, // Kyrotech Power Converter (full item, 2800c)
+}
+
+/** Episode free track — always included (assumed fully completed regardless of pass). */
+export function computeEpisodeFreeTrackIncome(): IncomeResult {
+  return partialToIncome(EPISODE_FREE_TRACK)
+}
+
+/** Episode paid track only (conquestPass handled in computeConquestIncome). */
 export function computePassesIncome(inputs: PassesInputs): IncomeResult {
-  void inputs // stub — rewards not yet implemented
-  return { ...ZERO_INCOME }
+  if (!inputs.episodePass) return { ...ZERO_INCOME }
+  return partialToIncome(EPISODE_PAID_TRACK)
 }
 
 // ─── Fixed Daily Income (assumed, no user input) ──────────────────────────────

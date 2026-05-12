@@ -52,22 +52,29 @@ interface Props {
 
 export default function SpecialEventsSection({ inputs, onChange }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {EVENTS.map(({ key, label, frequency, options }) => (
-        <SelectRow
-          key={key}
-          label={label}
-          sublabel={frequency}
-          value={inputs[key] as string}
-          onValueChange={(v) => {
-            if (key === 'smugglersRun1') onChange({ ...inputs, smugglersRun1: v as SRITier })
-            else if (key === 'smugglersRun2') onChange({ ...inputs, smugglersRun2: v as SRIITier })
-            else if (key === 'smugglersRun3') onChange({ ...inputs, smugglersRun3: v as SRIIITier })
-            else onChange({ ...inputs, covenOfShadows: v as CovenTier })
-          }}
-          options={options}
-        />
-      ))}
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Select the highest tier you complete for each Special Event.
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {EVENTS.map(({ key, label, frequency, options }) => (
+          <SelectRow
+            key={key}
+            label={label}
+            sublabel={frequency}
+            value={inputs[key] as string}
+            onValueChange={(v) => {
+              if (key === 'smugglersRun1') onChange({ ...inputs, smugglersRun1: v as SRITier })
+              else if (key === 'smugglersRun2')
+                onChange({ ...inputs, smugglersRun2: v as SRIITier })
+              else if (key === 'smugglersRun3')
+                onChange({ ...inputs, smugglersRun3: v as SRIIITier })
+              else onChange({ ...inputs, covenOfShadows: v as CovenTier })
+            }}
+            options={options}
+          />
+        ))}
+      </div>
     </div>
   )
 }

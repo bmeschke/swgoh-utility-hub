@@ -32,9 +32,14 @@ export default function ConquestSection({ inputs, onChange }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Select which mode you play and the highest crate tier you typically reach. Reward data
-        pending — totals will update once added.
+        Select which mode you play and the highest crate tier you typically reach.
       </p>
+      {inputs.mode !== 'Hard' && (
+        <p className="text-sm text-amber-400/80">
+          Crate rewards for Easy and Normal modes are not yet supported — only conquest track
+          rewards are included for these modes.
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <SelectRow
           label="Mode"

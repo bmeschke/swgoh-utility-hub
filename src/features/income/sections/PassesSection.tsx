@@ -14,7 +14,8 @@ export default function PassesSection({ inputs, onChange }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Select any passes you purchase. Reward data pending — totals will update once added.
+        Select any passes you purchase. The free tracks for both the Episode and Conquest are always
+        included in your totals regardless of pass selection.
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {PASSES.map(({ key, label }) => (

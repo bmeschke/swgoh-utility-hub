@@ -54,9 +54,14 @@ const MOD_ROWS: { key: keyof IncomeResult; label: string }[] = [
 const GEAR_ROWS: { key: keyof IncomeResult; label: string }[] = [
   { key: 'kyrotechShockProd', label: 'Kyrotech Shock Prod Salvage' },
   { key: 'kyrotechBattleComputer', label: 'Kyrotech Battle Computer Salvage' },
+  { key: 'kyrotechShockProdItem', label: 'Kyrotech Shock Prod' },
+  { key: 'kyrotechBattleComputerItem', label: 'Kyrotech Battle Computer' },
+  { key: 'kyrotechPowerConverterItem', label: 'Kyrotech Power Converter' },
   { key: 'injectorHead', label: 'Injector Head Salvage' },
   { key: 'injectorHandle', label: 'Injector Handle Salvage' },
   { key: 'injectorCell', label: 'Injector Cell Salvage' },
+  { key: 'gearG12Salvage', label: 'Gear 12 Salvage' },
+  { key: 'gearG12PlusSalvage', label: 'Gear 12+ Salvage' },
 ]
 
 const RELIC_MAT_ROWS: { key: keyof IncomeResult; label: string }[] = [
