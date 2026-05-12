@@ -189,23 +189,15 @@ function TotalsSection({
             )
           }
 
-          // All three cells share the same controlled open state so tapping
-          // any cell on mobile opens/closes the breakdown, and only one row
-          // across all sections can be open at a time.
+          // One controlled Tooltip on the label cell drives open/close for
+          // both desktop hover and mobile tap. Monthly and daily cells trigger
+          // the same open state on tap but have no Tooltip of their own —
+          // this prevents multiple popups appearing simultaneously.
           const isOpen = openKey === key
           const handlePointerDown = (e: React.PointerEvent) => {
             e.stopPropagation()
             onOpen(isOpen ? null : key)
           }
-          const tooltipContent = (
-            <TooltipContent
-              side="right"
-              sideOffset={8}
-              className="!bg-card !text-card-foreground border border-border shadow-lg px-3 py-2.5 max-w-none"
-            >
-              <BreakdownTooltip rowKey={key} sources={breakdown!} total={monthly} />
-            </TooltipContent>
-          )
           return (
             <React.Fragment key={key}>
               <Tooltip open={isOpen ? true : undefined}>
@@ -216,34 +208,30 @@ function TotalsSection({
                 >
                   {label}
                 </TooltipTrigger>
-                {tooltipContent}
-              </Tooltip>
-              <Tooltip open={isOpen ? true : undefined}>
-                <TooltipTrigger
-                  render={
-                    <span
-                      className="text-right tabular-nums whitespace-nowrap pr-3 cursor-help"
-                      onPointerDown={handlePointerDown}
-                    />
-                  }
+                <TooltipContent
+                  side="right"
+                  sideOffset={8}
+                  className="!bg-card !text-card-foreground border border-border shadow-lg px-3 py-2.5 max-w-none"
+                  onPointerDown={(e) => {
+                    e.stopPropagation()
+                    onOpen(null)
+                  }}
                 >
-                  {fmt(monthly)}
-                </TooltipTrigger>
-                {tooltipContent}
+                  <BreakdownTooltip rowKey={key} sources={breakdown!} total={monthly} />
+                </TooltipContent>
               </Tooltip>
-              <Tooltip open={isOpen ? true : undefined}>
-                <TooltipTrigger
-                  render={
-                    <span
-                      className="text-right tabular-nums whitespace-nowrap text-muted-foreground cursor-help"
-                      onPointerDown={handlePointerDown}
-                    />
-                  }
-                >
-                  ~{fmt(daily(monthly))}/day
-                </TooltipTrigger>
-                {tooltipContent}
-              </Tooltip>
+              <span
+                className="text-right tabular-nums whitespace-nowrap pr-3 cursor-help"
+                onPointerDown={handlePointerDown}
+              >
+                {fmt(monthly)}
+              </span>
+              <span
+                className="text-right tabular-nums whitespace-nowrap text-muted-foreground cursor-help"
+                onPointerDown={handlePointerDown}
+              >
+                ~{fmt(daily(monthly))}/day
+              </span>
             </React.Fragment>
           )
         })}
