@@ -153,23 +153,16 @@ function TotalsSection({
   rows,
   totals,
   breakdown,
+  openKey,
+  onOpen,
 }: {
   heading: string
   rows: { key: keyof IncomeResult; label: string }[]
   totals: IncomeResult
   breakdown?: IncomeSource[]
+  openKey: string | null
+  onOpen: (key: string | null) => void
 }) {
-  const [clickOpenKey, setClickOpenKey] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!clickOpenKey) return
-    function close() {
-      setClickOpenKey(null)
-    }
-    document.addEventListener('pointerdown', close)
-    return () => document.removeEventListener('pointerdown', close)
-  }, [clickOpenKey])
-
   return (
     <div>
       <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
@@ -196,8 +189,14 @@ function TotalsSection({
             )
           }
 
-          // Rows with multiple sources get a tooltip on all three cells
-          const isClickOpen = clickOpenKey === key
+          // All three cells share the same controlled open state so tapping
+          // any cell on mobile opens/closes the breakdown, and only one row
+          // across all sections can be open at a time.
+          const isOpen = openKey === key
+          const handlePointerDown = (e: React.PointerEvent) => {
+            e.stopPropagation()
+            onOpen(isOpen ? null : key)
+          }
           const tooltipContent = (
             <TooltipContent
               side="right"
@@ -209,36 +208,36 @@ function TotalsSection({
           )
           return (
             <React.Fragment key={key}>
-              <Tooltip open={isClickOpen ? true : undefined}>
+              <Tooltip open={isOpen ? true : undefined}>
                 <TooltipTrigger
                   render={
-                    <span
-                      className="pr-4 cursor-help w-fit"
-                      onPointerDown={(e) => {
-                        e.stopPropagation()
-                        setClickOpenKey(isClickOpen ? null : key)
-                      }}
-                    />
+                    <span className="pr-4 cursor-help w-fit" onPointerDown={handlePointerDown} />
                   }
                 >
                   {label}
                 </TooltipTrigger>
                 {tooltipContent}
               </Tooltip>
-              <Tooltip>
+              <Tooltip open={isOpen ? true : undefined}>
                 <TooltipTrigger
                   render={
-                    <span className="text-right tabular-nums whitespace-nowrap pr-3 cursor-help" />
+                    <span
+                      className="text-right tabular-nums whitespace-nowrap pr-3 cursor-help"
+                      onPointerDown={handlePointerDown}
+                    />
                   }
                 >
                   {fmt(monthly)}
                 </TooltipTrigger>
                 {tooltipContent}
               </Tooltip>
-              <Tooltip>
+              <Tooltip open={isOpen ? true : undefined}>
                 <TooltipTrigger
                   render={
-                    <span className="text-right tabular-nums whitespace-nowrap text-muted-foreground cursor-help" />
+                    <span
+                      className="text-right tabular-nums whitespace-nowrap text-muted-foreground cursor-help"
+                      onPointerDown={handlePointerDown}
+                    />
                   }
                 >
                   ~{fmt(daily(monthly))}/day
@@ -271,6 +270,18 @@ function SectionHeader() {
 // ─── Main component ────────────────────────────────────────────────────────
 
 export default function IncomeTotals({ totals, breakdown }: Props) {
+  const [openKey, setOpenKey] = useState<string | null>(null)
+
+  // Close when tapping anywhere outside a trigger
+  useEffect(() => {
+    if (!openKey) return
+    function close() {
+      setOpenKey(null)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [openKey])
+
   return (
     <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
       <div className="flex items-baseline justify-between gap-4">
@@ -287,6 +298,8 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
             rows={CURRENCY_ROWS}
             totals={totals}
             breakdown={breakdown}
+            openKey={openKey}
+            onOpen={setOpenKey}
           />
           <div className="border-t" />
           <TotalsSection
@@ -294,6 +307,8 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
             rows={ABILITY_ROWS}
             totals={totals}
             breakdown={breakdown}
+            openKey={openKey}
+            onOpen={setOpenKey}
           />
           <div className="border-t" />
           <TotalsSection
@@ -301,19 +316,30 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
             rows={MOD_ROWS}
             totals={totals}
             breakdown={breakdown}
+            openKey={openKey}
+            onOpen={setOpenKey}
           />
         </div>
 
         {/* Right column: Gear + Relic Materials + Datacron Materials */}
         <div className="space-y-4">
           <SectionHeader />
-          <TotalsSection heading="Gear" rows={GEAR_ROWS} totals={totals} breakdown={breakdown} />
+          <TotalsSection
+            heading="Gear"
+            rows={GEAR_ROWS}
+            totals={totals}
+            breakdown={breakdown}
+            openKey={openKey}
+            onOpen={setOpenKey}
+          />
           <div className="border-t" />
           <TotalsSection
             heading="Relic Materials"
             rows={RELIC_MAT_ROWS}
             totals={totals}
             breakdown={breakdown}
+            openKey={openKey}
+            onOpen={setOpenKey}
           />
           <div className="border-t" />
           <TotalsSection
@@ -321,6 +347,8 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
             rows={DATACRON_ROWS}
             totals={totals}
             breakdown={breakdown}
+            openKey={openKey}
+            onOpen={setOpenKey}
           />
         </div>
       </div>
