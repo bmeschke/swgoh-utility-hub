@@ -262,7 +262,7 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
   // Mobile: close the breakdown when the user taps outside the row or tooltip
   useEffect(() => {
     if (!openKey) return
-    const close = (e: TouchEvent) => {
+    const close = (e: Event) => {
       const target = e.target as Element
       if (
         !target.closest('[data-income-row]') &&
@@ -271,8 +271,8 @@ export default function IncomeTotals({ totals, breakdown }: Props) {
         setOpenKey(null)
       }
     }
-    document.addEventListener('touchstart', close, { passive: true })
-    return () => document.removeEventListener('touchstart', close, { passive: true })
+    document.addEventListener('touchstart', close, { passive: true } as AddEventListenerOptions)
+    return () => document.removeEventListener('touchstart', close)
   }, [openKey])
 
   const sectionProps = {
