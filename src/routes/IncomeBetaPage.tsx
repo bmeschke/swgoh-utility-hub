@@ -154,7 +154,6 @@ export default function IncomeBetaPage() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-baseline gap-3">
           <h1 className="text-2xl font-bold">Income Calculator</h1>
-          <span className="text-sm text-muted-foreground">beta</span>
         </div>
         <IncomeAssumptionsModal />
       </div>

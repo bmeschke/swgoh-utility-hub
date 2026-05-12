@@ -7,6 +7,17 @@ export interface PatchNote {
 // Newest entry first.
 export const patchNotes: PatchNote[] = [
   {
+    date: '2026-05-11',
+    title: 'Income Calculator',
+    changes: [
+      'New tool: Income Calculator — model your monthly crystal, currency, and material income from every SWGOH reward source.',
+      'Configure Assault Battles, Grand Arena, Fleet Arena, Territory Wars, Raids, Territory Battles, Conquest, Special Events, and more.',
+      'Toggle premium passes (Episode Pass, Conquest Pass) to see how they affect your monthly income.',
+      'Totals panel shows monthly and daily averages for every resource type, with per-source breakdowns on hover.',
+      'Sign in to save your selections across sessions.',
+    ],
+  },
+  {
     date: '2026-05-08',
     title: 'Item Values Modal Improvements',
     changes: [

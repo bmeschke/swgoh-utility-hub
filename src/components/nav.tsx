@@ -22,11 +22,9 @@ export default function Nav() {
           <NavLink to="/evaluate-pack" className={navLinkClass}>
             Evaluate Pack
           </NavLink>
-          {isSignedIn && (
-            <NavLink to="/income" className={navLinkClass}>
-              Income
-            </NavLink>
-          )}
+          <NavLink to="/income" className={navLinkClass}>
+            Income
+          </NavLink>
         </div>
         <div className="flex items-center gap-2">
           <PatchNotesModal />
