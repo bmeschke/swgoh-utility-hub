@@ -160,7 +160,7 @@ export default function IncomeBetaPage() {
       </div>
 
       {!isSignedIn && (
-        <p className="text-sm text-muted-foreground border rounded px-3 py-2">
+        <p className="text-sm text-amber-400/80 border border-amber-400/40 rounded px-3 py-2">
           Sign in to save your selections across sessions.
         </p>
       )}
