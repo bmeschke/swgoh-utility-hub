@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useUser } from '@clerk/clerk-react'
+import { useUser, SignInButton } from '@clerk/clerk-react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import {
@@ -159,8 +159,13 @@ export default function IncomeBetaPage() {
       </div>
 
       {!isSignedIn && (
-        <p className="text-sm text-amber-400/80 border border-amber-400/40 rounded px-3 py-2">
-          Sign in to save your selections across sessions.
+        <p className="text-sm text-amber-400/80 border border-amber-400/40 rounded px-3 py-2 text-center">
+          <SignInButton mode="modal">
+            <span className="underline hover:text-amber-400 transition-colors cursor-pointer">
+              Sign in
+            </span>
+          </SignInButton>{' '}
+          to save your selections across sessions.
         </p>
       )}
 
