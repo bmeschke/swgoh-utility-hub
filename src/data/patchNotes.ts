@@ -8,6 +8,21 @@ export interface PatchNote {
 export const patchNotes: PatchNote[] = [
   {
     date: '2026-05-12',
+    title: 'Switch to 28-Day Monthly Cycle',
+    changes: [
+      'All "monthly" income totals are now calculated over 28 days instead of 30. Most in-game events (GAC, Conquest, Territory War, Territory Battle, etc.) run on a 4-week cycle, making 28 days a more accurate baseline.',
+    ],
+  },
+  {
+    date: '2026-05-12',
+    title: 'Grand Arena Assumption Update',
+    changes: [
+      'Updated the assumed win/loss record from 5W/4L to 4.5W/4.5L per season.',
+      'Updated weekly-end placement assumption from always 2nd–4th to a 50/50 split between 2nd–4th and 5th–7th (1.5× each per season).',
+    ],
+  },
+  {
+    date: '2026-05-12',
     title: 'Omega Battle Refresh Cost Increase',
     changes: [
       'Made changes to the crystal value of Zeta ability materials based on the updated Tier 3 refresh cost in the new Omega Battles.',

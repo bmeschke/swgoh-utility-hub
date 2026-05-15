@@ -37,6 +37,12 @@ export default function IncomeAssumptionsModal() {
           <Separator />
           <ul className="space-y-2 text-muted-foreground">
             <li>
+              <span className="font-medium text-foreground">28-day cycle</span> — all "monthly"
+              totals are calculated over 28 days, not 30 or 31. Most in-game events (GAC, Conquest,
+              Territory War, Territory Battle, etc.) run on a 4-week cycle, making 28 days the most
+              accurate baseline.
+            </li>
+            <li>
               <span className="font-medium text-foreground">Daily Activities</span> — completed
               every day (+70 crystals/day, +1 Omega/day, +3 Kyrotech salvage/day); includes +25
               crystals/day from Galactic War
@@ -52,8 +58,8 @@ export default function IncomeAssumptionsModal() {
               Zetas/month total)
             </li>
             <li>
-              <span className="font-medium text-foreground">Grand Arena</span> — 5 wins + 4 losses
-              per season, always finishing 2nd–4th place
+              <span className="font-medium text-foreground">Grand Arena</span> — 4.5 wins + 4.5
+              losses per season; weekly-end placement averaged as 1.5× 2nd–4th and 1.5× 5th–7th
             </li>
             <li>
               <span className="font-medium text-foreground">Territory Wars</span> — 2 wins + 2

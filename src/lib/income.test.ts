@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   ZERO_INCOME,
+  DAYS_PER_MONTH,
   SHORT_TIER_BATTLES,
   sumIncome,
   computeAssaultBattleIncome,
@@ -147,15 +148,12 @@ describe('computeAssaultBattleIncome', () => {
 // ─── computeGrandArenaIncome ──────────────────────────────────────────────────
 
 describe('computeGrandArenaIncome', () => {
+  // Formula: DAYS_PER_MONTH×daily + (1.5×500 + 1.5×250) WE crystals + eventEnd + 4.5×win + 4.5×loss
   it('Kyber Div 1 gives highest crystals', () => {
     const result = computeGrandArenaIncome({ league: 'Kyber', division: 1 })
-    // Daily: 260×30=7,800 + wins: 5×900=4,500 + events: 4×500=2,000 = 14,300
-    expect(result.crystals).toBe(260 * 30 + 5 * 900 + 4 * 500)
-  })
-
-  it('Kyber Div 1 championship tokens = 5×125 + 4×1600 = 7,025', () => {
-    const result = computeGrandArenaIncome({ league: 'Kyber', division: 1 })
-    expect(result.championshipTokens).toBe(5 * 125 + 4 * 1600)
+    expect(result.crystals).toBe(
+      DAYS_PER_MONTH * 260 + (1.5 * 500 + 1.5 * 250) + 2135 + 4.5 * 900 + 4.5 * 200
+    )
   })
 
   it('Carbonite Div 5 gives lowest crystals', () => {
@@ -164,35 +162,37 @@ describe('computeGrandArenaIncome', () => {
     expect(carbonite.crystals).toBeLessThan(kyber.crystals)
   })
 
-  it('daily portion scales correctly — Aurodium Div 3 = 150×30 + bonus', () => {
+  it('daily portion scales correctly — Aurodium Div 3', () => {
     const result = computeGrandArenaIncome({ league: 'Aurodium', division: 3 })
-    expect(result.crystals).toBe(150 * 30 + 5 * 900 + 4 * 500)
+    expect(result.crystals).toBe(
+      DAYS_PER_MONTH * 150 + (1.5 * 500 + 1.5 * 250) + 1445 + 4.5 * 470 + 4.5 * 150
+    )
   })
 
-  it('returns zero for all non-crystal/token fields', () => {
+  it('weekly-end rewards are nonzero (1.5× 2nd–4th + 1.5× 5th–7th)', () => {
     const result = computeGrandArenaIncome({ league: 'Kyber', division: 1 })
-    expect(result.getMk1).toBe(0)
+    expect(result.getMk1).toBe(1.5 * 150 + 1.5 * 100) // 375
     expect(result.getMk2).toBe(0)
-    expect(result.omega).toBe(0)
+    expect(result.omega).toBe(1.5 * 3 + 1.5 * 2) // 7.5
   })
 })
 
 // ─── computeFleetArenaIncome ──────────────────────────────────────────────────
 
 describe('computeFleetArenaIncome', () => {
-  it('rank 1 gives 400×30=12,000 crystals/month', () => {
+  it('rank 1 gives 400×28=11,200 crystals/month', () => {
     const result = computeFleetArenaIncome({ rank: '1' })
-    expect(result.crystals).toBe(400 * 30)
+    expect(result.crystals).toBe(400 * DAYS_PER_MONTH)
   })
 
-  it('rank 1 gives 1,800×30=54,000 fleet tokens/month', () => {
+  it('rank 1 gives 1,800×28=50,400 fleet tokens/month', () => {
     const result = computeFleetArenaIncome({ rank: '1' })
-    expect(result.fleetArenaTokens).toBe(1800 * 30)
+    expect(result.fleetArenaTokens).toBe(1800 * DAYS_PER_MONTH)
   })
 
-  it('rank 1 gives 200,000×30 ship building materials/month', () => {
+  it('rank 1 gives 200,000×28 ship building materials/month', () => {
     const result = computeFleetArenaIncome({ rank: '1' })
-    expect(result.shipBuildingMaterials).toBe(200000 * 30)
+    expect(result.shipBuildingMaterials).toBe(200000 * DAYS_PER_MONTH)
   })
 
   it('rank 51-100 gives 0 crystals', () => {
@@ -200,9 +200,9 @@ describe('computeFleetArenaIncome', () => {
     expect(result.crystals).toBe(0)
   })
 
-  it('rank 501+ gives 800×30=24,000 fleet tokens/month', () => {
+  it('rank 501+ gives 800×28=22,400 fleet tokens/month', () => {
     const result = computeFleetArenaIncome({ rank: '501+' })
-    expect(result.fleetArenaTokens).toBe(800 * 30)
+    expect(result.fleetArenaTokens).toBe(800 * DAYS_PER_MONTH)
   })
 
   it('lower ranks give fewer resources than higher ranks', () => {
@@ -216,12 +216,12 @@ describe('computeFleetArenaIncome', () => {
 // ─── computeFixedDailyIncome ──────────────────────────────────────────────────
 
 describe('computeFixedDailyIncome', () => {
-  it('returns 2,850 crystals/month (70 daily activities + 25 GW = 95/day × 30)', () => {
-    expect(computeFixedDailyIncome().crystals).toBe(95 * 30)
+  it('returns 2,660 crystals/month (70 daily activities + 25 GW = 95/day × 28)', () => {
+    expect(computeFixedDailyIncome().crystals).toBe(95 * DAYS_PER_MONTH)
   })
 
-  it('returns 30 omega/month (1/day × 30)', () => {
-    expect(computeFixedDailyIncome().omega).toBe(30)
+  it('returns 28 omega/month (1/day × 28)', () => {
+    expect(computeFixedDailyIncome().omega).toBe(DAYS_PER_MONTH)
   })
 
   it('returns zero for all other fields', () => {

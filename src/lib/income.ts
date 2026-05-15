@@ -1,5 +1,8 @@
 import { TB_STAR_PAYOUTS, TB_MISSIONS } from '@/lib/tb-data'
 
+/** SWGOH runs on a 4-week cycle; all monthly income is calculated over 28 days. */
+export const DAYS_PER_MONTH = 28
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface IncomeResult {
@@ -404,13 +407,37 @@ const GAC_PAYOUTS: Record<GACLeague, Record<GACDivision, GACPayouts>> = {
 
 // Monthly assumptions:
 // - 1 season/month: 3 active weeks + 1 week off (daily crystals awarded all 30 days)
-// - 5 wins + 4 losses per season (→ 2nd–4th placement assumed)
-// - Weekly-end placement assumed 2nd–4th: 500 crystals + fixed non-crystal rewards
+// - 4.5 wins + 4.5 losses per season
+// - Weekly-end placement split: 1.5× 2nd–4th + 1.5× 5th–7th
 // - Non-crystal weekly-end rewards are identical across all leagues/divisions
-const GAC_WEEKS_PER_SEASON = 3
-const GAC_WINS_PER_SEASON = 5
-const GAC_LOSSES_PER_SEASON = 4
-const GAC_WE_CRYSTALS = 500 // assumed 2nd–4th weekly placement for all players
+const GAC_WINS_PER_SEASON = 4.5
+const GAC_LOSSES_PER_SEASON = 4.5
+
+// Weekly-end placement rewards (non-crystal rewards same across all leagues/divisions)
+const GAC_WE_2_4 = {
+  crystals: 500,
+  getMk1: 150,
+  zeta: 2,
+  omega: 3,
+  mk1PowerFlowControlChip: 43,
+  mk1FusionCoil: 38,
+  mk1Amplifier: 54,
+  mk1Capacitor: 54,
+  mk2PulseModulator: 22,
+}
+const GAC_WE_5_7 = {
+  crystals: 250,
+  getMk1: 100,
+  zeta: 1,
+  omega: 2,
+  mk1PowerFlowControlChip: 32,
+  mk1FusionCoil: 27,
+  mk1Amplifier: 38,
+  mk1Capacitor: 38,
+  mk2PulseModulator: 16,
+}
+const GAC_WE_OCCURRENCES_2_4 = 1.5
+const GAC_WE_OCCURRENCES_5_7 = 1.5
 
 export function computeGrandArenaIncome(inputs: GrandArenaInputs): IncomeResult {
   const p = GAC_PAYOUTS[inputs.league][inputs.division]
@@ -419,25 +446,30 @@ export function computeGrandArenaIncome(inputs: GrandArenaInputs): IncomeResult 
       ? KYBER_D1_EVENT_END[inputs.kyberD1Bracket]
       : p.eventEnd
 
+  const weeCrystals =
+    GAC_WE_OCCURRENCES_2_4 * GAC_WE_2_4.crystals + GAC_WE_OCCURRENCES_5_7 * GAC_WE_5_7.crystals
+
   const crystals =
-    30 * p.daily +
-    GAC_WEEKS_PER_SEASON * GAC_WE_CRYSTALS +
+    DAYS_PER_MONTH * p.daily +
+    weeCrystals +
     eventEnd +
     GAC_WINS_PER_SEASON * p.win +
     GAC_LOSSES_PER_SEASON * p.loss
 
+  const wee = <K extends keyof typeof GAC_WE_2_4>(k: K) =>
+    GAC_WE_OCCURRENCES_2_4 * GAC_WE_2_4[k] + GAC_WE_OCCURRENCES_5_7 * GAC_WE_5_7[k]
+
   return {
     ...ZERO_INCOME,
     crystals,
-    // Non-crystal weekly-end rewards × 3 weeks (same for everyone)
-    getMk1: GAC_WEEKS_PER_SEASON * 150,
-    zeta: GAC_WEEKS_PER_SEASON * 2,
-    omega: GAC_WEEKS_PER_SEASON * 3,
-    mk1PowerFlowControlChip: GAC_WEEKS_PER_SEASON * 43,
-    mk1FusionCoil: GAC_WEEKS_PER_SEASON * 38,
-    mk1Amplifier: GAC_WEEKS_PER_SEASON * 54,
-    mk1Capacitor: GAC_WEEKS_PER_SEASON * 54,
-    mk2PulseModulator: GAC_WEEKS_PER_SEASON * 22,
+    getMk1: wee('getMk1'),
+    zeta: wee('zeta'),
+    omega: wee('omega'),
+    mk1PowerFlowControlChip: wee('mk1PowerFlowControlChip'),
+    mk1FusionCoil: wee('mk1FusionCoil'),
+    mk1Amplifier: wee('mk1Amplifier'),
+    mk1Capacitor: wee('mk1Capacitor'),
+    mk2PulseModulator: wee('mk2PulseModulator'),
   }
 }
 
@@ -502,9 +534,9 @@ export function computeFleetArenaIncome(inputs: FleetArenaInputs): IncomeResult 
   const daily = FLEET_ARENA_DAILY[inputs.rank]
   return {
     ...ZERO_INCOME,
-    crystals: daily.crystals * 30,
-    fleetArenaTokens: daily.fleetArenaTokens * 30,
-    shipBuildingMaterials: daily.shipBuildingMaterials * 30,
+    crystals: daily.crystals * DAYS_PER_MONTH,
+    fleetArenaTokens: daily.fleetArenaTokens * DAYS_PER_MONTH,
+    shipBuildingMaterials: daily.shipBuildingMaterials * DAYS_PER_MONTH,
   }
 }
 
@@ -1879,17 +1911,17 @@ export function computePassesIncome(inputs: PassesInputs): IncomeResult {
 export function computeDailyActivitiesIncome(): IncomeResult {
   return {
     ...ZERO_INCOME,
-    crystals: 70 * 30, // 2,100/mo
-    omega: 1 * 30, // 30/mo
-    kyrotechShockProd: 1.5 * 30, // 45/mo (avg; 3 total kyrotech/day split evenly)
-    kyrotechBattleComputer: 1.5 * 30, // 45/mo
+    crystals: 70 * DAYS_PER_MONTH, // 1,960/mo
+    omega: 1 * DAYS_PER_MONTH, // 28/mo
+    kyrotechShockProd: 1.5 * DAYS_PER_MONTH, // 42/mo (avg; 3 total kyrotech/day split evenly)
+    kyrotechBattleComputer: 1.5 * DAYS_PER_MONTH, // 42/mo
   }
 }
 
 export function computeGalacticWarIncome(): IncomeResult {
   return {
     ...ZERO_INCOME,
-    crystals: 25 * 30, // 750/mo
+    crystals: 25 * DAYS_PER_MONTH, // 700/mo
   }
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import type { IncomeResult } from '@/lib/income'
+import { DAYS_PER_MONTH } from '@/lib/income'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 export interface IncomeSource {
@@ -17,7 +18,7 @@ function fmt(n: number) {
 }
 
 function daily(monthly: number) {
-  return Math.round(monthly / 30)
+  return Math.round(monthly / DAYS_PER_MONTH)
 }
 
 const CURRENCY_ROWS: { key: keyof IncomeResult; label: string }[] = [
