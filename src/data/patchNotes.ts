@@ -7,6 +7,14 @@ export interface PatchNote {
 // Newest entry first.
 export const patchNotes: PatchNote[] = [
   {
+    date: '2026-05-12',
+    title: 'Omega Battle Refresh Cost Increase',
+    changes: [
+      'Made changes to the crystal value of Zeta ability materials based on the updated Tier 3 refresh cost in the new Omega Battles.',
+      'Zeta crystal value updated to 133.',
+    ],
+  },
+  {
     date: '2026-05-11',
     title: 'Income Calculator',
     changes: [
