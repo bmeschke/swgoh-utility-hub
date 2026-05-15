@@ -11,7 +11,7 @@ export const patchNotes: PatchNote[] = [
     title: 'Omega Battle Refresh Cost Increase',
     changes: [
       'Made changes to the crystal value of Zeta ability materials based on the updated Tier 3 refresh cost in the new Omega Battles.',
-      'Zeta crystal value updated to 133.',
+      'Zeta crystal value updated to 133 (based on the first refresh).',
     ],
   },
   {
